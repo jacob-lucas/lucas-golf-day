@@ -73,15 +73,15 @@ async function run() {
     const e4 = boot('Jacob', { wxReject: 'Load failed', wttr: { current_condition: [{ temp_C: '31', weatherCode: '113', windspeedKmph: '12' }] } }); await wait(100);
     check(/31/.test(e4.text('#wx')) && /Clear/.test(e4.text('#wx')), 'falls back to wttr.in when Open-Meteo fails: ' + e4.text('#wx'));
     const bi = boot('Jacob', { build: { commit: 'abcdef1234567890', time: '2026-11-15T05:30:00Z' } }); await wait(100);
-    bi.click('#btnSettings'); await wait(50);
     const bl = bi.d.querySelector('#buildinfo a');
-    check(bl && /commit\/abcdef1234567890$/.test(bl.href) && /abcdef1/.test(bl.textContent), 'Setup footer links to the build commit: ' + (bl && bl.href));
+    check(bl && /commit\/abcdef1234567890$/.test(bl.href) && /abcdef1/.test(bl.textContent), 'Leaderboard footer links to the build commit: ' + (bl && bl.href));
     check(/1:30 pm|1:30 PM/i.test(bi.text('#buildinfo')), 'build time shown in Perth time: ' + bi.text('#buildinfo'));
     const cr = boot('Ken'); await wait(50);
     cr.click('.crest'); await wait(20);
     check(cr.has('.lbox img') && cr.has('.lbx'), 'tapping the crest opens a larger image with an X');
     cr.click('.lbx'); await wait(20);
     check(!cr.has('.lbox'), 'X closes the crest image');
+    check(/\.scrim\.lightbox\{align-items:center\}/.test(cr.d.querySelector('style').textContent), 'crest image is vertically centred');
     check(e3.has('#wx[data-act=wxretry]'), 'weather line is tappable to retry');
   }
 
