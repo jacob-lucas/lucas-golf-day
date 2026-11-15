@@ -80,6 +80,12 @@ async function run() {
     const lb = cr.text('#main');
     check(/Michael \(c\), Matt, Lachie/.test(lb) && /Jacob \(c\), Stu, Jett/.test(lb) && /Ken \(c\), Adam, Ron/.test(lb), 'leaderboard marks each captain with (c): ' + lb.slice(0, 0));
     check((lb.match(/\(c\)/g) || []).length === 3, 'exactly three captains marked');
+    cr.click('[data-act=hcpinfo][data-team=A]'); await wait(20);
+    const hs = cr.text('.sheet');
+    check(/Team A handicap/.test(hs) && /Michael/.test(hs) && /11\.4/.test(hs) && /5\.7/.test(hs), 'hcp modal shows workings for Team A: ' + hs.slice(0, 0));
+    check(/Team handicap used: 6 shots/.test(hs), 'hcp modal shows the allowance used');
+    check(!cr.has('.tm') && !/Scores/.test(cr.text('.sheet h2')), 'tapping hcp does not open the team card');
+    cr.click('[data-act=close]'); await wait(20);
     check(/Lachie Team hcp 6/.test(lb) && /Jett Team hcp 6/.test(lb) && /Ron Team hcp 8/.test(lb.replace(' \u00b7',''))|| /Team hcp 6.*Team hcp 6.*Team hcp 8/.test(lb), 'leaderboard shows each team handicap: ' + lb.slice(0, 0));
     cr.click('.crest'); await wait(20);
     check(cr.has('.lbox img') && cr.has('.lbx'), 'tapping the crest opens a larger image with an X');
