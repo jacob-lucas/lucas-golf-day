@@ -644,6 +644,18 @@ function saveName(id) {
   toast('Team name saved');
   closeSheet();
 }
+function resetConfirmSheet() {
+  openSheet('<h2>Are you sure?</h2>' +
+    '<p>This erases every score, tee choice, drive and mulligan entered for all three teams. Teams, players, handicaps, course and tee times stay as they are. This cannot be undone.</p>' +
+    '<div class="actions"><button class="btn danger" data-act="resetyes">Yes</button><button class="btn" data-act="resetno">No</button></div>');
+}
+function resetScores() {
+  if (me !== ORGANISER) return closeSheet();
+  const t = {};
+  TEAM_IDS.forEach((id) => { t[id] = { holes: DEL }; });
+  save({ teams: t });
+  toast('All scores erased');
+}
 function closeSheet() { $('#layer').innerHTML = ''; edit = null; draft = null; }
 
 function rulesSheet() {
@@ -819,7 +831,7 @@ function setupSheet() {
     '<p class="note">Balance spreads the players across three teams of three so the team allowances are as close as possible. It moves as few unlocked players as it can.</p>' +
     '<h3>Teams, captains and allowances</h3>' + TEAM_IDS.map(teamBlock).join('') +
     '<p class="note">Leave an allowance blank to use the standard formula (25% of the lowest handicap, 15% of the middle, 10% of the highest, halved for nine holes). Type a number to override it.</p>' +
-    '<div class="actions"><button class="btn primary" data-act="savesetup">Save setup</button><button class="btn" data-act="close">Cancel</button></div>');
+    '<div class="actions"><button class="btn primary" data-act="savesetup">Save setup</button><button class="btn" data-act="close">Cancel</button><button class="btn danger" data-act="resetask">Reset Scores</button></div>');
   const sh = $('.sheet');
   if (sh) { sh.style.animation = 'none'; sh.scrollTop = top; }
 }
@@ -926,6 +938,9 @@ function onAct(el, ev) {
   switch (a) {
     case 'wxretry': return loadWx();
     case 'crest': return crestSheet();
+    case 'resetask': if (me !== ORGANISER || !draft) return; syncDraft(); return resetConfirmSheet();
+    case 'resetno': if (!draft) return closeSheet(); return setupSheet();
+    case 'resetyes': resetScores(); if (!draft) return closeSheet(); return setupSheet();
     case 'editname': return nameSheet(cardTeam);
     case 'savename': return saveName(el.dataset.team);
     case 'hcptoggle': hcpOpen = !hcpOpen; return render();

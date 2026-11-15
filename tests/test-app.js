@@ -225,6 +225,36 @@ async function run() {
     j.click('[data-act=close]');
   }
 
+  // ---------- 5c. Reset scores ----------
+  section('5c. Reset scores');
+  {
+    const j = boot('Jacob'); await wait(50);
+    j.click('#tabCards'); j.click('[data-act=cardteam][data-team=B]');
+    j.click('tr[data-hole="1"]'); j.click('[data-act=savehole]');
+    j.click('[data-act=cardteam][data-team=A]'); j.click('[data-act=cardteam][data-team=B]');
+    check(/6|4/.test(j.d.querySelector('tr[data-hole="1"] .sc').textContent) && j.d.querySelector('tr[data-hole="1"] .sc').textContent !== '', 'hole 1 has a score before reset');
+    j.click('#btnSettings');
+    check(j.has('[data-act=resetask]') && /Reset Scores/.test(j.text('[data-act=resetask]')), 'Setup has a Reset Scores button');
+    const order = Array.from(Array.from(j.d.querySelectorAll('.sheet .actions')).pop().querySelectorAll('button')).map((b) => b.textContent);
+    check(order.join('|') === 'Save setup|Cancel|Reset Scores', 'Reset Scores sits after Cancel: ' + order.join('|'));
+    j.d.querySelector('#fCourse').value = 'Keep Me Golf Club'; j.change('#fCourse');
+    j.click('[data-act=resetask]');
+    check(/Are you sure/.test(j.text('.sheet h2')) && j.has('[data-act=resetyes]') && j.has('[data-act=resetno]'), 'confirm modal asks Are you sure with Yes and No');
+    j.click('[data-act=resetno]');
+    check(j.has('#fCourse') && j.d.querySelector('#fCourse').value === 'Keep Me Golf Club', 'No returns to Setup with edits kept');
+    j.click('[data-act=close]');
+    check(j.d.querySelector('tr[data-hole="1"] .sc').textContent !== '', 'No leaves the scores untouched');
+    j.click('#btnSettings'); j.click('[data-act=resetask]'); j.click('[data-act=resetyes]'); await wait(30);
+    check(j.has('#fCourse'), 'Yes returns to Setup');
+    j.click('[data-act=close]');
+    check(j.d.querySelector('tr[data-hole="1"] .sc').textContent === '', 'Yes erases the scorecard data');
+    j.click('#tabBoard');
+    check(j.d.querySelector('.brow[data-team=B] .thru').textContent === '-', 'leaderboard back to no holes played');
+    j.click('#btnSettings');
+    check(!/Scores have already been entered/.test(j.text('.sheet')), 'no scores-entered warning after reset');
+    check(j.d.querySelector('#pN0').value === 'Michael', 'players and teams are kept');
+  }
+
   // ---------- 6. Setup: course, balance, overrides, validation ----------
   section('6. Setup');
   {
