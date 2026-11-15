@@ -89,6 +89,26 @@ async function run() {
     const hb = cr.text('.hcpbox');
     check(/Team handicap: 6 shots/.test(hb) && /Michael/.test(hb) && /11\.4/.test(hb) && /5\.7/.test(hb), 'team card shows the handicap workings: ' + hb.slice(0, 0));
     const kids = Array.from(cr.d.querySelector('.card').children).map((e) => e.className || e.tagName);
+    check(!cr.has('[data-act=editname]'), 'non-captain sees no edit icon on a team card');
+    {
+      const kc = boot('Ken'); await wait(50);
+      kc.click('#tabCards'); kc.click('[data-act=cardteam][data-team=C]');
+      check(kc.has('[data-act=editname]'), 'captain sees an edit icon next to the team name');
+      kc.click('[data-act=editname]');
+      check(kc.has('#fTeamName'), 'edit icon opens the name modal');
+      kc.d.querySelector('#fTeamName').value = 'Albatross';
+      kc.click('[data-act=savename]'); await wait(30);
+      check(!kc.has('#fTeamName'), 'saving closes the modal');
+      check(/Albatross/.test(kc.text('.card h2')) && /Albatross/.test(kc.text('.seg')), 'new name shown on the card and tabs');
+      kc.click('#tabBoard'); check(/Albatross/.test(kc.text('#main')), 'new name shown on the leaderboard');
+      kc.click('#tabCards'); kc.click('[data-act=editname]');
+      kc.d.querySelector('#fTeamName').value = 'team a';
+      kc.click('[data-act=savename]');
+      check(kc.has('#fTeamName'), 'name already used by another team is rejected');
+      kc.d.querySelector('#fTeamName').value = '';
+      kc.click('[data-act=savename]'); await wait(30);
+      check(/Team C/.test(kc.text('.card h2')), 'blank name goes back to the default');
+    }
     cr.click('.hcphead');
     check(!/Lowest/.test(cr.text('.hcpbox')), 'second tap collapses it again');
     cr.click('.hcphead');
