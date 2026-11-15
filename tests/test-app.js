@@ -8,7 +8,8 @@ const fs = require('fs');
 const path = require('path');
 
 const file = path.resolve(process.argv[2] || path.join(__dirname, '..', 'index.html'));
-const html = fs.readFileSync(file, 'utf8').replace(/<script src="https:[^>]*><\/script>/g, '');
+const html0 = fs.readFileSync(file, 'utf8');
+const html = html0.replace(/<script src="https:[^>]*><\/script>/g, '');
 
 let pass = 0, fail = 0;
 const check = (cond, msg) => { if (cond) { pass++; console.log('  PASS ' + msg); } else { fail++; console.log('  FAIL ' + msg); } };
@@ -37,9 +38,11 @@ async function run() {
   // ---------- 1. Start-up ----------
   section('1. Start-up');
   {
+    check(!/apiKey: "YOUR_/.test(html0), 'Firebase config is filled in (no YOUR_ placeholders), otherwise the live site shows Demo mode');
+    check(/projectId: "lucas-golf-day"/.test(html0), 'Firebase projectId is lucas-golf-day');
     const a = boot('Jacob'); await wait(50);
     check(a.text('h1') === 'Lucas Golf Day 2026', 'title is Lucas Golf Day 2026');
-    check(/Demo mode/.test(a.text('#statusText')), 'demo mode shown without Firebase config (' + a.text('#statusText') + ')');
+    check(/Demo mode/.test(a.text('#statusText')), 'demo mode shown when the Firebase scripts are unavailable (' + a.text('#statusText') + ')');
     check(a.d.querySelectorAll('.brow').length === 3, 'leaderboard lists 3 teams');
     check(/Course.*To be confirmed/.test(a.text('.info')), 'course shows To be confirmed');
     check(a.has('.dateline'), 'date line present');
