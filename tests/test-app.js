@@ -81,6 +81,12 @@ async function run() {
     check(/Michael \(c\), Matt, Lachie/.test(lb) && /Jacob \(c\), Stu, Jett/.test(lb) && /Ken \(c\), Adam, Ron/.test(lb), 'leaderboard marks each captain with (c): ' + lb.slice(0, 0));
     check((lb.match(/\(c\)/g) || []).length === 3, 'exactly three captains marked');
     check(!cr.has('[data-act=hcpinfo]'), 'leaderboard hcp is no longer a link');
+    check(cr.has('[data-act=hcpboardtoggle]') && !/Lowest/.test(cr.text('.hcpboard')), 'leaderboard has a collapsed handicap block');
+    cr.click('[data-act=hcpboardtoggle]');
+    const hbd = cr.text('.hcpboard');
+    check(/Team A: 6 shots/.test(hbd) && /Team B: 6 shots/.test(hbd) && /Team C: 8 shots/.test(hbd) && /11\.4/.test(hbd), 'tapping it shows the workings for all three teams');
+    cr.click('[data-act=hcpboardtoggle]');
+    check(!/Lowest/.test(cr.text('.hcpboard')), 'tapping again collapses it');
     check(cr.text('.foot') === 'Net is gross minus the team handicap, spread over the holes played. Tap a team to see its scorecard.', 'leaderboard footer is the short version: ' + cr.text('.foot').slice(0, 0));
     cr.click('#tabCards'); cr.click('[data-act=cardteam][data-team=A]');
     check(!/Lowest/.test(cr.text('.hcpbox')) && /Team handicap: 6 shots/.test(cr.text('.hcpbox')), 'handicap block starts collapsed');
