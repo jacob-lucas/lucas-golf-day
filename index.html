@@ -69,14 +69,18 @@ main{padding:14px 14px 20px;max-width:560px;margin:0 auto}
 .brow:active{background:var(--board2)}
 .pos{font:700 18px var(--cond);color:#cfe3d7}
 .tname{font:700 21px/1.05 var(--serif);letter-spacing:.2px}
-.hcpt{width:100%;border-collapse:collapse;margin:10px 0;font-size:14px}
+.hcpbox{padding:4px 14px 10px}
+.hcpbox h3{margin:8px 0 2px;font:700 15px var(--serif);color:var(--board)}
+.hcpsum{margin:6px 0 0;font-size:13px;color:var(--mute)}
+.hcpsum b{color:var(--ink)}
+.hcpt{width:100%;border-collapse:collapse;margin:4px 0;font-size:14px}
 .hcpt th{font:700 12px var(--serif);color:var(--board);text-align:left;padding:4px 6px;border-bottom:1px solid var(--line)}
-.hcpt td{padding:7px 6px;border-bottom:1px solid var(--line)}
-.hcpt td small{display:block;color:var(--mute);font-size:12px}
+.hcpt td{padding:4px 6px;border-bottom:1px solid var(--line)}
+.hcpt td small{color:var(--mute);font-size:12px;margin-left:4px}
 .hcpt th,.hcpt td{text-align:right}
 .hcpt th:first-child,.hcpt td:first-child{text-align:left}
 .hcpt tfoot td{font-weight:700}
-.tallow{cursor:pointer;color:var(--gold);white-space:nowrap}
+.tallow{color:var(--gold);white-space:nowrap}
 .tplay{display:block;font:400 12px/1.3 var(--body);color:#9cc2ad;margin-top:3px}
 .num{font:700 30px/1 var(--cond);text-align:right;font-variant-numeric:tabular-nums}
 .num.under{color:var(--red)}
@@ -519,7 +523,7 @@ function renderBoard() {
     const names = TEAMS[r.id].players.map((p) => p.n + (p.n === state.config.captains[r.id] ? ' (c)' : '')).join(', ');
     return '<button class="brow" data-act="openteam" data-team="' + r.id + '">' +
       '<span class="pos">' + pos + '</span>' +
-      '<span><span class="tname">' + esc(TEAMS[r.id].name) + '</span><span class="tplay">' + esc(names) + '<span class="tallow" role="button" data-act="hcpinfo" data-team="' + r.id + '"> &middot; <u>Team hcp ' + TEAMS[r.id].allowance + '</u></span></span></span>' +
+      '<span><span class="tname">' + esc(TEAMS[r.id].name) + '</span><span class="tplay">' + esc(names) + '<span class="tallow"> &middot; Team hcp ' + TEAMS[r.id].allowance + '</span></span></span>' +
       '<span class="num' + (started && c.net2par < 0 ? ' under' : '') + '">' + net + '</span>' +
       '<span class="num small' + (started && c.gross2par < 0 ? ' under' : '') + '">' + gr + '</span>' +
       '<span class="thru">' + thru + '</span></button>';
@@ -576,7 +580,7 @@ function renderCards() {
   tally += '</div>';
 
   return banners() + seg + role + '<section class="card"><h2>' + esc(T.name) + '</h2><div class="sub">' +
-    esc(T.players.map((p) => p.n + ' (' + p.h + ')').join(', ')) + '</div>' + table + sum + tally + '</section>';
+    esc(T.players.map((p) => p.n + ' (' + p.h + ')').join(', ')) + '</div>' + hcpDetails(id) + table + sum + tally + '</section>';
 }
 
 function render() {
@@ -595,32 +599,25 @@ function crestSheet() {
   $('#layer').innerHTML = '<div class="scrim lightbox" data-act="scrim"><div class="lbox" role="dialog" aria-modal="true" aria-label="Lucas Golf Day logo"><button class="lbx" data-act="close" aria-label="Close">&times;</button><img src="icon-512.png" alt="Lucas Golf Day logo"></div></div>';
 }
 function fmtNum(x) { return String(Math.round(x * 100) / 100); }
-function hcpSheet(id) {
+function hcpDetails(id) {
   const T = TEAMS[id];
   const ps = T.players.slice().sort((a, b) => a.h - b.h);
   const W = [0.25, 0.15, 0.10], L = ['Lowest', 'Middle', 'Highest'];
-  let html = '<h2>' + esc(T.name) + ' handicap</h2>';
+  let html = '<div class="hcpbox"><h3>Team handicap: ' + T.allowance + ' shots</h3>';
   if (ps.length !== 3) {
-    html += '<p class="note">This team needs exactly 3 players to work out an allowance.</p>';
-  } else {
-    const parts = ps.map((p, i) => W[i] * p.h);
-    const sum = parts.reduce((a, b) => a + b, 0);
-    const half = sum / 2;
-    html += '<p class="note">Standard 3-person scramble allowance: 25% of the lowest handicap, 15% of the middle and 10% of the highest, halved because we play 9 holes, then rounded.</p>' +
-      '<table class="hcpt"><thead><tr><th>Player</th><th>Hcp</th><th>Weight</th><th>Shots</th></tr></thead><tbody>' +
-      ps.map((p, i) => '<tr><td>' + esc(p.n) + '<small>' + L[i] + '</small></td><td>' + fmtNum(p.h) + '</td><td>' + Math.round(W[i] * 100) + '%</td><td>' + fmtNum(parts[i]) + '</td></tr>').join('') +
-      '</tbody><tfoot>' +
-      '<tr><td colspan="3">Total</td><td>' + fmtNum(sum) + '</td></tr>' +
-      '<tr><td colspan="3">Halved for 9 holes</td><td>' + fmtNum(half) + '</td></tr>' +
-      '<tr><td colspan="3">Rounded (automatic allowance)</td><td>' + T.auto + '</td></tr>' +
-      '</tfoot></table>';
+    html += '<p class="note">This team needs exactly 3 players to work out an allowance.</p></div>';
+    return html;
   }
+  const parts = ps.map((p, i) => W[i] * p.h);
+  const sum = parts.reduce((a, b) => a + b, 0);
+  html += '<table class="hcpt"><thead><tr><th>Player</th><th>Hcp</th><th>Weight</th><th>Shots</th></tr></thead><tbody>' +
+    ps.map((p, i) => '<tr><td>' + esc(p.n) + ' <small>' + L[i] + '</small></td><td>' + fmtNum(p.h) + '</td><td>' + Math.round(W[i] * 100) + '%</td><td>' + fmtNum(parts[i]) + '</td></tr>').join('') +
+    '</tbody></table>' +
+    '<p class="hcpsum">' + fmtNum(sum) + ' &divide; 2 for 9 holes = ' + fmtNum(sum / 2) + ', rounded to <b>' + T.auto + '</b></p>';
   html += T.overridden
-    ? '<div class="warn">The organiser has set an override of <b>' + T.allowance + '</b> shots for this team, so that is used instead of the automatic ' + T.auto + '.</div>'
-    : '<p class="note"><b>Team handicap used: ' + T.allowance + ' shots.</b></p>';
-  html += '<p class="note">On the leaderboard, net takes off the allowance spread across the holes played so far.</p>' +
-    '<div class="actions"><button class="btn primary" data-act="close">Close</button></div>';
-  openSheet(html);
+    ? '<div class="warn">The organiser has set an override of <b>' + T.allowance + '</b> shots, which is used instead of the automatic ' + T.auto + '.</div>'
+    : '';
+  return html + '</div>';
 }
 function closeSheet() { $('#layer').innerHTML = ''; edit = null; draft = null; }
 
@@ -893,7 +890,6 @@ function onAct(el, ev) {
   switch (a) {
     case 'wxretry': return loadWx();
     case 'crest': return crestSheet();
-    case 'hcpinfo': return hcpSheet(el.dataset.team);
     case 'rules': return rulesSheet();
     case 'who': return whoSheet();
     case 'settings': if (me !== ORGANISER) return; draft = newDraft(); return setupSheet();
