@@ -1,0 +1,903 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#006747">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Lucas Golf Day">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Lucas Golf Day 2026</title>
+<style>
+:root{
+  --board:#006747; --board2:#0b7a57; --fairway:#006747;
+  --chalk:#f5f3e8; --paper:#ffffff; --ink:#17231c; --mute:#5a6a5f; --line:#d9dccb;
+  --red:#ff6350; --redInk:#c4291a; --gold:#f2c200;
+  --serif:Georgia,"Times New Roman",serif;
+  --cond:"Avenir Next Condensed","Arial Narrow","Roboto Condensed","Helvetica Neue",Arial,sans-serif;
+  --body:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{height:100%}
+body{margin:0;background:var(--chalk);color:var(--ink);font:16px/1.4 var(--body);
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:calc(68px + env(safe-area-inset-bottom,0px))}
+button{font:inherit;color:inherit;cursor:pointer}
+.hidden{display:none!important}
+
+/* Header */
+header{background:var(--board);color:#fff;padding:12px 16px 12px;position:sticky;top:0;z-index:5;border-bottom:4px solid var(--gold)}
+.hrow{display:flex;align-items:center;gap:8px}
+.title{flex:1;min-width:0}
+.title h1{margin:0;font:italic 400 27px/1.1 var(--serif);letter-spacing:.3px}
+.dateline{margin:8px 0 0;font-size:14px;color:#f7e7a0;display:flex;flex-wrap:wrap;gap:2px 14px}
+.wx{color:#fff}
+.info{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-bottom:14px}
+.info h2{margin:0 0 8px;font:700 19px var(--serif);color:var(--board)}
+.info dl{margin:0;display:grid;grid-template-columns:78px 1fr;gap:8px 10px;font-size:15px}
+.info dt{color:var(--board);font:700 14px var(--serif);padding-top:1px}
+.info dd{margin:0}
+.times{list-style:none;margin:0;padding:0}
+.times li{display:flex;justify-content:space-between;gap:12px;padding:1px 0}
+.link{background:none;border:0;padding:0;color:var(--board);text-decoration:underline;text-underline-offset:3px;font-size:inherit}
+.hbtn{background:transparent;border:1px solid #4f8a69;color:#fff;border-radius:999px;padding:6px 12px;font-size:14px}
+.hbtn:active{background:var(--board2)}
+.meta{display:flex;align-items:center;gap:8px;margin-top:10px;font-size:13px;color:#b9d3c4}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:999px;background:var(--board2);color:#fff;font-size:12px}
+.dot{width:8px;height:8px;border-radius:50%;background:#7bd88f}
+.dot.off{background:var(--gold)} .dot.demo{background:var(--red)}
+.who{margin-left:auto;background:none;border:0;color:#fff;text-decoration:underline;text-underline-offset:3px;font-size:13px;padding:2px 0}
+
+main{padding:14px 14px 20px;max-width:560px;margin:0 auto}
+.banner{background:#fff6dd;border:1px solid #ecd9a0;color:#5b4a14;border-radius:8px;padding:10px 12px;font-size:14px;margin-bottom:12px}
+
+/* Leaderboard board */
+.board{background:var(--board);color:#fff;border-radius:6px;overflow:hidden;box-shadow:0 0 0 3px #004b35,0 0 0 5px var(--gold)}
+.bhead,.brow{display:grid;grid-template-columns:34px 1fr 62px 54px 42px;align-items:center;gap:4px;padding:0 12px}
+.bhead{font:700 12px var(--serif);color:var(--gold);padding-top:10px;padding-bottom:6px;border-bottom:1px solid #3d8f70}
+.bhead span:nth-child(n+3){text-align:right}
+.brow{width:100%;text-align:left;background:none;border:0;border-bottom:1px solid #1d4d36;color:#fff;padding-top:12px;padding-bottom:12px}
+.brow:last-child{border-bottom:0}
+.brow:active{background:var(--board2)}
+.pos{font:700 18px var(--cond);color:#cfe3d7}
+.tname{font:700 21px/1.05 var(--serif);letter-spacing:.2px}
+.tplay{display:block;font:400 12px/1.3 var(--body);color:#9cc2ad;margin-top:3px}
+.num{font:700 30px/1 var(--cond);text-align:right;font-variant-numeric:tabular-nums}
+.num.under{color:var(--red)}
+.num.small{font-size:19px;color:#dcebe2}
+.num.small.under{color:#ff9d88}
+.thru{font:700 17px var(--cond);text-align:right;color:#cfe3d7}
+.foot{font-size:13px;color:var(--mute);margin:12px 2px 0}
+
+/* Scorecards */
+.seg{display:flex;background:#dfe3d7;border-radius:10px;padding:3px;margin-bottom:12px}
+.seg button{flex:1;border:0;background:none;border-radius:8px;padding:9px 0;font:700 16px var(--serif)}
+.seg button[aria-pressed=true]{background:var(--board);color:#fff}
+.who-line{font-size:14px;color:var(--mute);margin:0 2px 10px}
+.who-line b{color:var(--ink)}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.card h2{margin:0;padding:12px 14px 2px;font:700 21px var(--serif);color:var(--board)}
+.card .sub{padding:0 14px 10px;font-size:13px;color:var(--mute)}
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
+th{font:700 12px var(--serif);color:var(--board);text-align:center;padding:6px 4px;border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:#f1f4ec}
+td{text-align:center;padding:0;border-bottom:1px solid #e7eadf;height:46px}
+td.hl{font:700 18px var(--cond);color:var(--fairway)}
+td.sc{font:700 22px var(--cond)}
+td.tx{font-size:13px;color:var(--mute)}
+tr.edit{cursor:pointer}
+tr.edit:active{background:#eaf2e6}
+tr.next td:first-child{box-shadow:inset 4px 0 0 var(--gold)}
+.tp{font:700 16px var(--cond)}
+.tp.under{color:var(--redInk)}
+tfoot td{background:#f1f4ec;font-weight:700;height:42px;border-bottom:0}
+.sumgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border-top:1px solid var(--line)}
+.sumgrid div{background:var(--paper);padding:10px 8px;text-align:center}
+.sumgrid small{display:block;font:700 12px var(--serif);color:var(--board)}
+.sumgrid strong{font:700 24px var(--cond)}
+.tally{padding:12px 14px;border-top:1px solid var(--line);font-size:14px}
+.tally p{margin:0 0 6px}
+.tally p:last-child{margin:0}
+.chip{display:inline-block;background:#e6ede0;border-radius:999px;padding:2px 10px;margin:2px 4px 2px 0;font-size:13px}
+.chip.ok{background:#cfe8d3}
+
+/* Nav */
+nav{position:fixed;left:0;right:0;bottom:0;background:var(--paper);border-top:1px solid var(--line);display:flex;
+  padding-bottom:env(safe-area-inset-bottom,0px);z-index:6}
+nav button{flex:1;border:0;background:none;padding:12px 0 14px;font:700 16px var(--serif);color:var(--mute)}
+nav button[aria-current=page]{color:var(--board);box-shadow:inset 0 3px 0 var(--board)}
+
+/* Sheets */
+.scrim{position:fixed;inset:0;background:rgba(10,30,20,.55);z-index:10;display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:var(--paper);width:100%;max-width:560px;border-radius:16px 16px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom,0px));
+  max-height:92vh;overflow:auto;animation:up .18s ease-out}
+@keyframes up{from{transform:translateY(24px);opacity:.4}to{transform:none;opacity:1}}
+@media (prefers-reduced-motion:reduce){.sheet{animation:none}}
+.sheet h2{margin:0 0 4px;font:700 24px var(--serif);color:var(--board)}
+.sheet h3{margin:16px 0 6px;font:700 15px var(--serif);color:var(--board)}
+.sheet p{margin:4px 0}
+.stepper{display:flex;align-items:center;justify-content:center;gap:18px;margin:6px 0}
+.stepper button{width:60px;height:60px;border-radius:50%;border:1px solid var(--line);background:#fff;font:700 32px var(--cond)}
+.stepper button:active{background:#e6ede0}
+.stepper output{font:700 64px/1 var(--cond);min-width:72px;text-align:center}
+.stepper.small button{width:44px;height:44px;font-size:24px}
+.stepper.small output{font-size:34px;min-width:44px}
+.opts{display:grid;gap:8px}
+.opt{border:1px solid var(--line);background:#fff;border-radius:10px;padding:12px;text-align:left}
+.opt[aria-pressed=true]{border-color:var(--board);background:#e3efe6;box-shadow:inset 0 0 0 1px var(--board)}
+.opt:disabled{opacity:.45}
+.opt small{display:block;color:var(--mute)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chips .opt{padding:10px 14px}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:20px}
+.btn{border-radius:10px;padding:14px;border:1px solid var(--line);background:#fff;font-weight:600}
+.btn.primary{background:var(--board);border-color:var(--board);color:#fff;grid-column:1/-1;font-size:17px}
+.btn.danger{color:var(--redInk)}
+.rules li{margin:0 0 10px}
+.rules ul{padding-left:20px;margin:8px 0}
+.field{display:block;margin:10px 0}
+.field span{display:block;font-size:13px;color:var(--mute);margin-bottom:4px}
+input[type=text],select,input[type=number]{width:100%;padding:11px;border:1px solid var(--line);border-radius:8px;font:inherit;background:#fff}
+.pars{display:grid;grid-template-columns:repeat(9,1fr);gap:4px}
+.pars input{padding:10px 0;text-align:center}
+.prow{display:grid;grid-template-columns:1fr 58px 52px 46px 30px;gap:6px;align-items:center;margin:0 0 6px}
+.prow.phead{font:700 12px var(--serif);color:var(--board);margin-bottom:4px}
+.prow input[type=text],.prow input[type=number],.prow select{padding:9px 6px;min-width:0}
+.prow input[type=checkbox]{width:22px;height:22px;justify-self:center}
+.tm{border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:0 0 10px}
+.tmn{color:var(--mute);font-size:13px}
+.tmr{display:grid;grid-template-columns:1fr 1fr;gap:8px 10px;margin-top:8px}
+.tmr label{display:block;font-size:13px;color:var(--mute)}
+.tmr small{grid-column:1/-1;color:var(--mute)}
+.note{font-size:13px;color:var(--mute);margin:6px 0}
+.warn{background:#fff6dd;border:1px solid #ecd9a0;color:#5b4a14;border-radius:8px;padding:8px 10px;font-size:13px;margin:8px 0}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom,0px));background:#0a2a1e;color:#fff;
+  padding:10px 16px;border-radius:999px;font-size:14px;z-index:20}
+:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="hrow">
+    <div class="title">
+      <h1>Lucas Golf Day 2026</h1>
+    </div>
+    <button class="hbtn hidden" id="btnSettings" data-act="settings" aria-label="Course settings">Setup</button>
+    <button class="hbtn" data-act="rules">Rules</button>
+  </div>
+  <p class="dateline"><span>Monday 28 December</span><span id="wx" class="wx" aria-live="polite"></span></p>
+  <div class="meta">
+    <span class="pill"><span class="dot" id="dot"></span><span id="statusText">Connecting</span></span>
+    <button class="who" id="whoBtn" data-act="who">Choose name</button>
+  </div>
+</header>
+
+<main id="main"></main>
+
+<nav>
+  <button data-act="tab" data-tab="board" id="tabBoard">Leaderboard</button>
+  <button data-act="tab" data-tab="cards" id="tabCards">Scorecards</button>
+</nav>
+
+<div id="layer"></div>
+<div id="toast" class="toast hidden" role="status"></div>
+
+<!-- Firebase (loaded from Google's CDN, cached by the service worker after first load) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+<script>
+(function () {
+'use strict';
+
+/* ============================================================
+   1. SETTINGS YOU MAY NEED TO EDIT
+   ============================================================ */
+
+// Paste your Firebase web app config here (see README). Until then the app
+// runs in demo mode and keeps data on this device only.
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyD4jI45tVLFn71t9YlkdlfijX40HRFV13U",
+  authDomain: "lucas-golf-day.firebaseapp.com",
+  projectId: "lucas-golf-day",
+  storageBucket: "lucas-golf-day.firebasestorage.app",
+  messagingSenderId: "476398886062",
+  appId: "1:476398886062:web:9eb3ebbdc658238c35e13f"
+};
+const ROUND_DOC = "rounds/dec28";
+
+// Starting line-up. The organiser can change names, handicaps, teams and
+// mulligans under Setup, and those changes are stored with the round.
+const DEFAULT_PLAYERS = [
+  { n: "Michael", h: 6,  t: "A", m: 0, lock: false },
+  { n: "Matt",    h: 30, t: "A", m: 0, lock: false },
+  { n: "Lachie",  h: 54, t: "A", m: 3, lock: false },
+  { n: "Jacob",   h: 15, t: "B", m: 0, lock: false },
+  { n: "Stu",     h: 25, t: "B", m: 0, lock: false },
+  { n: "Jett",    h: 54, t: "B", m: 3, lock: false },
+  { n: "Ken",     h: 25, t: "C", m: 0, lock: false },
+  { n: "Adam",    h: 25, t: "C", m: 0, lock: false },
+  { n: "Ron",     h: 54, t: "C", m: 0, lock: false }
+];
+const DRIVES_EACH = 3;
+const ORGANISER = "Jacob"; // can edit course pars and captains under Setup
+
+/* ============================================================
+   2. STATE AND DATA LAYER
+   ============================================================ */
+
+const DEL = { __delete: true };
+const TEAM_IDS = ['A', 'B', 'C'];
+
+let raw = {};
+let state = norm(raw);
+let TEAMS = buildTeams(state.config);
+let mode = 'local';        // 'remote' or 'local'
+let net = 'connecting';    // 'live' | 'offline' | 'saving' | 'demo'
+let me = localStorage.getItem('golf.me') || '';
+let tab = 'board';
+let cardTeam = 'A';
+let edit = null;           // open hole editor
+let draft = null;          // open setup form
+let remoteRef = null;
+
+const num = (x) => { const v = parseFloat(x); return isNaN(v) ? NaN : v; };
+
+// Standard 3-person scramble allowance: 25% lowest, 15% middle, 10% highest, halved for 9 holes.
+function autoAllowance(hs) {
+  const a = hs.slice().sort((x, y) => x - y);
+  return (0.25 * a[0] + 0.15 * a[1] + 0.10 * a[2]) / 2;
+}
+
+function cleanPlayers(arr) {
+  if (!Array.isArray(arr) || arr.length !== 9) return DEFAULT_PLAYERS.map((p) => Object.assign({}, p));
+  return arr.map((p, i) => {
+    const d = DEFAULT_PLAYERS[i], q = p || {};
+    const h = num(q.h), m = num(q.m);
+    return {
+      n: String(q.n || d.n).slice(0, 20),
+      h: isNaN(h) ? d.h : Math.max(0, Math.min(54, h)),
+      t: TEAM_IDS.indexOf(q.t) >= 0 ? q.t : d.t,
+      m: isNaN(m) ? 0 : Math.max(0, Math.min(9, Math.round(m))),
+      lock: !!q.lock
+    };
+  });
+}
+
+function norm(r) {
+  r = r || {};
+  const c = r.config || {};
+  const players = cleanPlayers(c.players);
+  const caps = {};
+  TEAM_IDS.forEach((id) => {
+    const ps = players.filter((p) => p.t === id).sort((a, b) => a.h - b.h);
+    const want = c.captains && c.captains[id];
+    caps[id] = ps.some((p) => p.n === want) ? want : (ps[0] ? ps[0].n : '');
+  });
+  const ov = {};
+  TEAM_IDS.forEach((id) => {
+    const v = c.allowOverride && c.allowOverride[id];
+    if (typeof v === 'number' && v >= 0) ov[id] = v;
+  });
+  const s = {
+    config: {
+      course: c.course || '',
+      parsSet: !!c.parsSet,
+      pars: Array.isArray(c.pars) && c.pars.length === 9 ? c.pars.map(Number) : Array(9).fill(4),
+      players: players,
+      captains: caps,
+      teeTimes: Object.assign({}, c.teeTimes || {}),
+      allowOverride: ov
+    },
+    teams: {}
+  };
+  TEAM_IDS.forEach((id) => {
+    s.teams[id] = { holes: (r.teams && r.teams[id] && r.teams[id].holes) || {} };
+  });
+  return s;
+}
+
+// Builds the team lookup (names, handicaps, allowance, mulligans) from the stored setup.
+function buildTeams(cfg) {
+  const out = {};
+  TEAM_IDS.forEach((id) => {
+    const ps = cfg.players.filter((p) => p.t === id);
+    const auto = ps.length === 3 ? Math.round(autoAllowance(ps.map((p) => p.h))) : 0;
+    const ov = cfg.allowOverride[id];
+    out[id] = {
+      name: 'Team ' + id,
+      players: ps,
+      auto: auto,
+      allowance: typeof ov === 'number' ? ov : auto,
+      overridden: typeof ov === 'number',
+      mullPool: ps.reduce((a, p) => a + (p.m || 0), 0),
+      mullNames: ps.filter((p) => p.m > 0).map((p) => p.n)
+    };
+  });
+  return out;
+}
+
+function merge(t, p) {
+  for (const k in p) {
+    const v = p[k];
+    if (v === DEL) { delete t[k]; }
+    else if (v && typeof v === 'object' && !Array.isArray(v)) {
+      if (!t[k] || typeof t[k] !== 'object' || Array.isArray(t[k])) t[k] = {};
+      merge(t[k], v);
+    } else { t[k] = v; }
+  }
+  return t;
+}
+
+function toRemote(p) {
+  const out = {};
+  for (const k in p) {
+    const v = p[k];
+    if (v === DEL) out[k] = firebase.firestore.FieldValue.delete();
+    else if (v && typeof v === 'object' && !Array.isArray(v)) out[k] = toRemote(v);
+    else out[k] = v;
+  }
+  return out;
+}
+
+function setState(r) { raw = r || {}; state = norm(raw); TEAMS = buildTeams(state.config); render(); }
+
+function save(patch) {
+  if (mode === 'remote') {
+    remoteRef.set(toRemote(patch), { merge: true }).catch(() => toast('Could not save. Check your connection.'));
+  } else {
+    merge(raw, patch);
+    localStorage.setItem('golf.demo', JSON.stringify(raw));
+    setState(raw);
+  }
+}
+
+function startData() {
+  const configured = !FIREBASE_CONFIG.apiKey.startsWith('YOUR_');
+  if (configured && window.firebase) {
+    try {
+      firebase.initializeApp(FIREBASE_CONFIG);
+      const fs = firebase.firestore();
+      fs.enablePersistence({ synchronizeTabs: true }).catch(() => {});
+      remoteRef = fs.doc(ROUND_DOC);
+      mode = 'remote';
+      remoteRef.onSnapshot({ includeMetadataChanges: true }, (snap) => {
+        if (snap.metadata.hasPendingWrites) net = 'saving';
+        else net = snap.metadata.fromCache ? 'offline' : 'live';
+        setState(snap.data() || {});
+      }, () => { net = 'offline'; renderStatus(); });
+      return;
+    } catch (e) { /* fall through to demo mode */ }
+  }
+  mode = 'local';
+  net = 'demo';
+  try { raw = JSON.parse(localStorage.getItem('golf.demo') || '{}'); } catch (e) { raw = {}; }
+  window.addEventListener('storage', (ev) => {
+    if (ev.key === 'golf.demo') { try { setState(JSON.parse(ev.newValue || '{}')); } catch (e) {} }
+  });
+  setState(raw);
+}
+
+/* ============================================================
+   3. SCORING MATHS
+   ============================================================ */
+
+const teeDelta = (t) => (t === 'f' ? 1 : t === 'b' ? -1 : 0);
+const fmtPar = (n) => (n === 0 ? 'E' : n > 0 ? '+' + n : String(n));
+
+function calc(id) {
+  const T = TEAMS[id], holes = state.teams[id].holes, pars = state.config.pars;
+  let thru = 0, gross = 0, adj = 0, parSum = 0, mull = 0, teeHole = null;
+  const drives = {};
+  T.players.forEach((p) => { drives[p.n] = 0; });
+  for (let i = 1; i <= 9; i++) {
+    const h = holes[i];
+    if (!h) continue;
+    if (typeof h.s === 'number') { thru++; gross += h.s; adj += h.s + teeDelta(h.t); parSum += pars[i - 1]; }
+    if (h.t && h.t !== 'w' && teeHole === null) teeHole = i;
+    if (h.d && drives[h.d] !== undefined) drives[h.d]++;
+    mull += h.m || 0;
+  }
+  const allowNow = Math.round(T.allowance * thru / 9);
+  return { thru, gross, adj, parSum, mull, teeHole, drives, allowNow,
+    gross2par: adj - parSum, net2par: adj - parSum - allowNow, net: adj - T.allowance };
+}
+
+/* ============================================================
+   4. HELPERS
+   ============================================================ */
+
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const captainOf = (id) => state.config.captains[id];
+const canEdit = (id) => !!me && captainOf(id) === me;
+const myTeam = () => TEAM_IDS.find((id) => TEAMS[id].players.some((p) => p.n === me)) || null;
+
+function andList(a) { return a.length < 2 ? a.join('') : a.slice(0, -1).join(', ') + ' and ' + a[a.length - 1]; }
+function mullText() {
+  const ps = state.config.players.filter((p) => p.m > 0);
+  if (!ps.length) return 'No mulligans this round.';
+  const plural = (n) => n + ' free do-over' + (n === 1 ? '' : 's');
+  if (ps.every((p) => p.m === ps[0].m)) {
+    return andList(ps.map((p) => p.n)) + (ps.length === 1 ? ' gets ' : ' get ') + plural(ps[0].m) +
+      (ps.length === 1 ? '' : ' each') + ', to use on any shot. No one else gets mulligans.';
+  }
+  return andList(ps.map((p) => p.n + ' (' + p.m + ')')) + ' get free do-overs in the numbers shown, to use on any shot. No one else gets mulligans.';
+}
+
+let toastTimer;
+function toast(msg) {
+  const t = $('#toast');
+  t.textContent = msg; t.classList.remove('hidden');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.add('hidden'), 2400);
+}
+
+/* ============================================================
+   5. RENDER
+   ============================================================ */
+
+function renderStatus() {
+  const dot = $('#dot'), txt = $('#statusText');
+  dot.className = 'dot' + (net === 'offline' ? ' off' : net === 'demo' ? ' demo' : '');
+  txt.textContent = { live: 'Live', saving: 'Saving', offline: 'Offline, will sync', demo: 'Demo mode', connecting: 'Connecting' }[net];
+  $('#whoBtn').textContent = me ? 'You: ' + me : 'Choose name';
+  $('#btnSettings').classList.toggle('hidden', me !== ORGANISER);
+  $('#tabBoard').setAttribute('aria-current', tab === 'board' ? 'page' : 'false');
+  $('#tabCards').setAttribute('aria-current', tab === 'cards' ? 'page' : 'false');
+}
+
+function banners() {
+  let h = '';
+  if (mode === 'local') h += '<div class="banner">Demo mode: scores stay on this phone. Add your Firebase details to share scores live.</div>';
+  if (!state.config.parsSet) h += '<div class="banner">Course pars are not set yet, so every hole counts as par 4. ' + (me === ORGANISER ? 'Open Setup to enter them.' : 'The organiser will set them.') + '</div>';
+  return h;
+}
+
+function infoCard() {
+  const s = state.config;
+  const tbc = '<span style="color:var(--mute)">To be confirmed</span>';
+  const times = TEAM_IDS.map((id) => '<li><span>' + esc(TEAMS[id].name) + '</span><b>' + (s.teeTimes[id] ? esc(s.teeTimes[id]) : tbc) + '</b></li>').join('');
+  return '<section class="info"><h2>The details</h2><dl>' +
+    '<dt>Course</dt><dd>' + (s.course ? esc(s.course) : tbc) + '</dd>' +
+    '<dt>Format</dt><dd>Three-person Texas Scramble over nine holes, played off the white tees. Net scoring with team allowances. <button class="link" data-act="rules">Full rules</button></dd>' +
+    '<dt>Tee times</dt><dd><ul class="times">' + times + '</ul></dd></dl></section>';
+}
+
+function renderBoard() {
+  const rows = TEAM_IDS.map((id) => ({ id, c: calc(id) }));
+  rows.sort((a, b) => {
+    if (!a.c.thru && !b.c.thru) return 0;
+    if (!a.c.thru) return 1;
+    if (!b.c.thru) return -1;
+    return a.c.net2par - b.c.net2par || a.c.gross2par - b.c.gross2par;
+  });
+  let rank = 0, prev = null;
+  rows.forEach((r, i) => { if (r.c.thru) { if (prev === null || r.c.net2par !== prev) { rank = i + 1; prev = r.c.net2par; } r.rank = rank; } });
+  rows.forEach((r) => { r.tie = r.rank && rows.filter((x) => x.rank === r.rank).length > 1; });
+
+  const body = rows.map((r) => {
+    const c = r.c, started = c.thru > 0;
+    const pos = started ? (r.tie ? 'T' : '') + r.rank : '-';
+    const net = started ? fmtPar(c.net2par) : '-';
+    const gr = started ? fmtPar(c.gross2par) : '-';
+    const thru = c.thru === 9 ? 'F' : started ? String(c.thru) : '-';
+    const names = TEAMS[r.id].players.map((p) => p.n).join(', ');
+    return '<button class="brow" data-act="openteam" data-team="' + r.id + '">' +
+      '<span class="pos">' + pos + '</span>' +
+      '<span><span class="tname">' + esc(TEAMS[r.id].name) + '</span><span class="tplay">' + esc(names) + '</span></span>' +
+      '<span class="num' + (started && c.net2par < 0 ? ' under' : '') + '">' + net + '</span>' +
+      '<span class="num small' + (started && c.gross2par < 0 ? ' under' : '') + '">' + gr + '</span>' +
+      '<span class="thru">' + thru + '</span></button>';
+  }).join('');
+
+  return banners() + infoCard() +
+    '<div class="board"><div class="bhead"><span>Pos</span><span>Team</span><span>Net</span><span>Gross</span><span>Thru</span></div>' + body + '</div>' +
+    '<p class="foot">Scores are to par. Net takes off each team\u2019s allowance, spread across the holes played. Gross is before the allowance. Tee choice adjustments are included in both. Tap a team to see its scorecard.</p>';
+}
+
+function renderCards() {
+  const id = cardTeam, T = TEAMS[id], holes = state.teams[id].holes, pars = state.config.pars, c = calc(id);
+  const editable = canEdit(id);
+  const firstOpen = (() => { for (let i = 1; i <= 9; i++) if (!holes[i] || typeof holes[i].s !== 'number') return i; return 0; })();
+
+  const seg = '<div class="seg" role="group" aria-label="Team">' + TEAM_IDS.map((t) =>
+    '<button data-act="cardteam" data-team="' + t + '" aria-pressed="' + (t === id) + '">' + esc(TEAMS[t].name) + '</button>').join('') + '</div>';
+
+  const role = editable
+    ? '<p class="who-line"><b>You are the captain.</b> Tap a hole to enter the score.</p>'
+    : '<p class="who-line">View only. ' + esc(captainOf(id)) + ' is the captain and enters this team\u2019s scores.</p>';
+
+  const trs = pars.map((par, i) => {
+    const n = i + 1, h = holes[n], has = h && typeof h.s === 'number';
+    const adj = has ? h.s + teeDelta(h.t) : null;
+    const tp = has ? adj - par : null;
+    const tee = h && h.t === 'f' ? 'Fwd +1' : h && h.t === 'b' ? 'Back -1' : '';
+    const drive = h && h.d ? esc(h.d) : '';
+    const cls = (editable ? 'edit' : '') + (editable && n === firstOpen ? ' next' : '');
+    return '<tr class="' + cls + '"' + (editable ? ' data-act="edithole" data-hole="' + n + '" tabindex="0"' : '') + '>' +
+      '<td class="hl">' + n + '</td><td>' + par + '</td>' +
+      '<td class="sc">' + (has ? h.s : '') + '</td>' +
+      '<td class="tp' + (has && tp < 0 ? ' under' : '') + '">' + (has ? fmtPar(tp) : '') + '</td>' +
+      '<td class="tx">' + tee + '</td><td class="tx">' + drive + '</td></tr>';
+  }).join('');
+
+  const parTotal = pars.reduce((a, b) => a + b, 0);
+  const table = '<table><thead><tr><th>Hole</th><th>Par</th><th>Score</th><th>To par</th><th>Tee</th><th>Drive</th></tr></thead><tbody>' + trs +
+    '</tbody><tfoot><tr><td>Total</td><td>' + parTotal + '</td><td>' + (c.thru ? c.gross : '') + '</td><td>' + (c.thru ? fmtPar(c.gross2par) : '') + '</td><td></td><td></td></tr></tfoot></table>';
+
+  const sum = '<div class="sumgrid">' +
+    '<div><small>Score with tee choice</small><strong>' + (c.thru ? c.adj : '-') + '</strong></div>' +
+    '<div><small>Allowance</small><strong>' + T.allowance + '</strong></div>' +
+    '<div><small>Net' + (c.thru === 9 ? '' : ' so far') + '</small><strong>' + (c.thru ? (c.thru === 9 ? c.net : fmtPar(c.net2par)) : '-') + '</strong></div></div>';
+
+  const driveChips = T.players.map((p) => {
+    const d = c.drives[p.n];
+    return '<span class="chip' + (d >= DRIVES_EACH ? ' ok' : '') + '">' + esc(p.n) + ' ' + d + '/' + DRIVES_EACH + '</span>';
+  }).join('');
+  let tally = '<div class="tally"><p>Drives used: ' + driveChips + '</p>' +
+    '<p>Tee choice: ' + (c.teeHole ? 'used on hole ' + c.teeHole : 'still available') + '</p>';
+  if (T.mullPool) tally += '<p>Mulligans left: ' + (T.mullPool - c.mull) + ' of ' + T.mullPool + ' (' + esc(T.mullNames.join(', ')) + ')</p>';
+  tally += '</div>';
+
+  return banners() + seg + role + '<section class="card"><h2>' + esc(T.name) + '</h2><div class="sub">' +
+    esc(T.players.map((p) => p.n + ' (' + p.h + ')').join(', ')) + '</div>' + table + sum + tally + '</section>';
+}
+
+function render() {
+  renderStatus();
+  $('#main').innerHTML = tab === 'board' ? renderBoard() : renderCards();
+}
+
+/* ============================================================
+   6. SHEETS (rules, name picker, hole editor, setup)
+   ============================================================ */
+
+function openSheet(html) {
+  $('#layer').innerHTML = '<div class="scrim" data-act="scrim"><div class="sheet" role="dialog" aria-modal="true">' + html + '</div></div>';
+}
+function closeSheet() { $('#layer').innerHTML = ''; edit = null; draft = null; }
+
+function rulesSheet() {
+  openSheet('<h2>Rules</h2><div class="rules"><ul>' +
+    '<li><b>Format:</b> Each threesome is one team. Everyone tees off, the team picks the best shot, and all three play from there until the ball is holed.</li>' +
+    '<li><b>Drives:</b> Each player\u2019s tee shot must be used at least ' + DRIVES_EACH + ' times over the 9 holes.</li>' +
+    '<li><b>Tees:</b> Everyone plays the white tees by default.</li>' +
+    '<li><b>Tee choice, once per team:</b> Before anyone tees off on a hole, the team may move forward one tee box (add 1 to the score on that hole) or move back one tee box (subtract 1). One use per team for the whole round. The choice is locked once the first shot is hit.</li>' +
+    '<li><b>Mulligans:</b> ' + esc(mullText()) + '</li>' +
+    '<li><b>Scoring:</b> Lowest net score wins. Net is the team score, plus or minus the tee choice adjustment, minus the team allowance (' + TEAM_IDS.map((id) => id + ': ' + TEAMS[id].allowance).join(', ') + ').</li>' +
+    '<li><b>Captains:</b> Each team\u2019s captain enters the score after every hole. Everyone else can watch every scorecard.</li>' +
+    '<li><b>Tiebreaker:</b> Closest to the pin on the last hole.</li>' +
+    '</ul></div><div class="actions"><button class="btn primary" data-act="close">Close</button></div>');
+}
+
+function whoSheet() {
+  const groups = TEAM_IDS.map((id) => '<h3>' + esc(TEAMS[id].name) + '</h3><div class="chips">' +
+    TEAMS[id].players.map((p) => '<button class="opt" aria-pressed="' + (p.n === me) + '" data-act="setme" data-name="' + esc(p.n) + '">' + esc(p.n) + '</button>').join('') + '</div>').join('');
+  openSheet('<h2>Who are you?</h2><p>Pick your name. If you are your team\u2019s captain you can enter its scores. Everyone else can view all scorecards.</p>' + groups +
+    (me ? '<div class="actions"><button class="btn primary" data-act="close">Cancel</button></div>' : ''));
+}
+
+function holeSheet() {
+  const e = edit, T = TEAMS[e.team], c = calc(e.team), par = state.config.pars[e.hole - 1];
+  const teeElsewhere = c.teeHole !== null && c.teeHole !== e.hole;
+  const mullBase = c.mull - ((state.teams[e.team].holes[e.hole] || {}).m || 0);
+  const mullLeft = T.mullPool - mullBase;
+  const tee = (v, label, note) => '<button class="opt" data-act="settee" data-v="' + v + '" aria-pressed="' + (e.t === v) + '"' +
+    (v !== 'w' && teeElsewhere ? ' disabled' : '') + '>' + label + '<small>' + note + '</small></button>';
+
+  openSheet('<h2>' + esc(T.name) + ', hole ' + e.hole + '</h2><p>Par ' + par + '</p>' +
+    '<h3>Team score for the hole</h3><div class="stepper"><button data-act="sdec" aria-label="Fewer strokes">-</button><output id="sval">' + e.s + '</output><button data-act="sinc" aria-label="More strokes">+</button></div>' +
+    '<h3>Tee used</h3><div class="opts">' +
+      tee('w', 'White tees', 'Default, no change') +
+      tee('f', 'Forward one box', teeElsewhere ? 'Tee choice already used on hole ' + c.teeHole : 'Adds 1 to the score') +
+      tee('b', 'Back one box', teeElsewhere ? 'Tee choice already used on hole ' + c.teeHole : 'Subtracts 1 from the score') + '</div>' +
+    '<h3>Whose drive was used?</h3><div class="chips">' +
+      T.players.map((p) => '<button class="opt" data-act="setdrive" data-name="' + esc(p.n) + '" aria-pressed="' + (e.d === p.n) + '">' + esc(p.n) + ' (' + c.drives[p.n] + '/' + DRIVES_EACH + ')</button>').join('') + '</div>' +
+    (T.mullPool ? '<h3>Mulligans used on this hole (' + mullLeft + ' left before this hole)</h3><div class="stepper small"><button data-act="mdec" aria-label="Fewer mulligans">-</button><output id="mval">' + e.m + '</output><button data-act="minc" aria-label="More mulligans">+</button></div>' : '') +
+    '<div class="actions"><button class="btn primary" data-act="savehole">Save hole ' + e.hole + '</button>' +
+    '<button class="btn danger" data-act="clearhole">Clear hole</button><button class="btn" data-act="close">Cancel</button></div>');
+}
+
+function newDraft() {
+  const c = state.config;
+  const d = {
+    course: c.course,
+    tee: Object.assign({}, c.teeTimes),
+    pars: c.pars.map(String),
+    players: c.players.map((p) => ({ n: p.n, h: String(p.h), t: p.t, m: String(p.m), lock: p.lock })),
+    allow: {},
+    cap: Object.assign({}, c.captains)
+  };
+  TEAM_IDS.forEach((id) => { d.allow[id] = c.allowOverride[id] !== undefined ? String(c.allowOverride[id]) : ''; });
+  return d;
+}
+
+function syncDraft() {
+  if (!draft || !$('#fCourse')) return;
+  draft.course = $('#fCourse').value;
+  TEAM_IDS.forEach((id) => {
+    draft.tee[id] = $('#fTee' + id).value;
+    draft.allow[id] = $('#fAllow' + id).value;
+    const cv = $('#fCap' + id).value;
+    if (cv) draft.cap[id] = cv;
+  });
+  draft.pars = Array.from({ length: 9 }, (_, i) => $('#fPar' + i).value);
+  draft.players.forEach((p, i) => {
+    p.n = $('#pN' + i).value; p.h = $('#pH' + i).value; p.t = $('#pT' + i).value;
+    p.m = $('#pM' + i).value; p.lock = $('#pL' + i).checked;
+  });
+}
+
+function draftTeam(id) {
+  const ps = draft.players.filter((p) => p.t === id);
+  const hs = ps.map((p) => num(p.h));
+  const ok = ps.length === 3 && hs.every((x) => !isNaN(x));
+  return { ps: ps, auto: ok ? Math.round(autoAllowance(hs)) : null };
+}
+
+function autoText(t) {
+  if (t.ps.length !== 3) return 'Needs exactly 3 players (has ' + t.ps.length + ')';
+  return t.auto === null ? 'Check the handicaps' : 'Automatic allowance: ' + t.auto + ' shots';
+}
+
+function capOptions(id) {
+  const t = draftTeam(id);
+  const names = t.ps.map((p) => p.n.trim()).filter(Boolean);
+  let cur = draft.cap[id];
+  if (names.indexOf(cur) < 0) {
+    const low = t.ps.slice().sort((a, b) => num(a.h) - num(b.h))[0];
+    cur = low ? low.n.trim() : '';
+  }
+  draft.cap[id] = cur;
+  return names.map((n) => '<option' + (n === cur ? ' selected' : '') + '>' + esc(n) + '</option>').join('');
+}
+
+function updatePreview() {
+  TEAM_IDS.forEach((id) => {
+    const t = draftTeam(id);
+    const n = $('#tmN' + id); if (n) n.textContent = t.ps.map((p) => p.n).join(', ');
+    const a = $('#tmA' + id); if (a) a.textContent = autoText(t);
+    const sel = $('#fCap' + id);
+    if (sel && document.activeElement !== sel) sel.innerHTML = capOptions(id);
+  });
+}
+
+function teamBlock(id) {
+  const t = draftTeam(id);
+  return '<div class="tm"><div><b>Team ' + id + '</b> <span class="tmn" id="tmN' + id + '">' + esc(t.ps.map((p) => p.n).join(', ')) + '</span></div>' +
+    '<div class="tmr"><label>Captain<select class="dr" id="fCap' + id + '">' + capOptions(id) + '</select></label>' +
+    '<label>Allowance override<input class="dr" type="number" inputmode="numeric" min="0" max="30" id="fAllow' + id + '" value="' + esc(draft.allow[id]) + '" placeholder="auto"></label>' +
+    '<small id="tmA' + id + '">' + autoText(t) + '</small></div></div>';
+}
+
+function setupSheet() {
+  if (me !== ORGANISER || !draft) return;
+  const old = $('.sheet'), top = old ? old.scrollTop : 0;
+  const started = TEAM_IDS.some((id) => Object.keys(state.teams[id].holes).length > 0);
+  const rows = draft.players.map((p, i) => '<div class="prow">' +
+    '<input class="dr" type="text" id="pN' + i + '" value="' + esc(p.n) + '" maxlength="20" aria-label="Player ' + (i + 1) + ' name">' +
+    '<input class="dr" type="number" inputmode="decimal" step="0.1" min="0" max="54" id="pH' + i + '" value="' + esc(p.h) + '" aria-label="Handicap">' +
+    '<select class="dr dteam" id="pT' + i + '" aria-label="Team">' + TEAM_IDS.map((id) => '<option' + (p.t === id ? ' selected' : '') + '>' + id + '</option>').join('') + '</select>' +
+    '<input class="dr" type="number" inputmode="numeric" min="0" max="9" id="pM' + i + '" value="' + esc(p.m) + '" aria-label="Mulligans">' +
+    '<input class="dr" type="checkbox" id="pL' + i + '"' + (p.lock ? ' checked' : '') + ' aria-label="Keep on this team when balancing">' +
+    '</div>').join('');
+
+  openSheet('<h2>Setup</h2>' +
+    (started ? '<div class="warn">Scores have already been entered. Changing teams, names or allowances now changes the leaderboard, and drive counts are tied to player names.</div>' : '') +
+    '<label class="field"><span>Course name</span><input type="text" id="fCourse" class="dr" value="' + esc(draft.course) + '" maxlength="60"></label>' +
+    '<h3>Tee times</h3>' + TEAM_IDS.map((id) => '<label class="field"><span>Team ' + id + '</span><input type="text" class="dr" id="fTee' + id + '" value="' + esc(draft.tee[id] || '') + '" maxlength="20" placeholder="e.g. 8:00 am"></label>').join('') +
+    '<h3>Par for holes 1 to 9</h3><div class="pars">' + draft.pars.map((v, i) => '<input type="number" inputmode="numeric" min="3" max="6" id="fPar' + i + '" value="' + esc(v) + '" aria-label="Par hole ' + (i + 1) + '">').join('') + '</div>' +
+    '<h3>Players and handicaps</h3>' +
+    '<div class="prow phead"><span>Name</span><span>Hcp</span><span>Team</span><span>Mull</span><span>Lock</span></div>' + rows +
+    '<p class="note">Mull is the number of free do-overs a player gets, shared within their team. Tick Lock to keep a player on their team when you balance.</p>' +
+    '<div class="actions" style="margin-top:10px"><button class="btn primary" data-act="balance">Balance teams</button></div>' +
+    '<p class="note">Balance spreads the players across three teams of three so the team allowances are as close as possible. It moves as few unlocked players as it can.</p>' +
+    '<h3>Teams, captains and allowances</h3>' + TEAM_IDS.map(teamBlock).join('') +
+    '<p class="note">Leave an allowance blank to use the standard formula (25% of the lowest handicap, 15% of the middle, 10% of the highest, halved for nine holes). Type a number to override it.</p>' +
+    '<div class="actions"><button class="btn primary" data-act="savesetup">Save setup</button><button class="btn" data-act="close">Cancel</button></div>');
+  const sh = $('.sheet');
+  if (sh) { sh.style.animation = 'none'; sh.scrollTop = top; }
+}
+
+function balanceDraft() {
+  syncDraft();
+  const P = draft.players.map((p) => ({ h: num(p.h), t: p.t, lock: p.lock }));
+  if (P.some((p) => isNaN(p.h))) return toast('Fix the handicaps first');
+  const cnt = { A: 0, B: 0, C: 0 };
+  P.forEach((p) => { if (p.lock) cnt[p.t]++; });
+  if (TEAM_IDS.some((id) => cnt[id] > 3)) return toast('More than 3 players are locked to one team');
+  const asg = P.map((p) => (p.lock ? p.t : null));
+  const free = P.map((p, i) => i).filter((i) => !P[i].lock);
+  let best = null;
+  const score = () => {
+    const al = [], sums = [];
+    TEAM_IDS.forEach((id) => {
+      const hs = P.filter((p, i) => asg[i] === id).map((p) => p.h);
+      al.push(autoAllowance(hs));
+      sums.push(hs.reduce((a, b) => a + b, 0));
+    });
+    const range = Math.max.apply(null, al) - Math.min.apply(null, al);
+    const mean = sums.reduce((a, b) => a + b, 0) / 3;
+    const spread = sums.reduce((a, b) => a + (b - mean) * (b - mean), 0);
+    const moves = asg.reduce((a, t, i) => a + (t !== P[i].t ? 1 : 0), 0);
+    return [Math.round(range * 100), Math.round(spread), moves];
+  };
+  const better = (a, b) => { for (let i = 0; i < 3; i++) { if (a[i] !== b[i]) return a[i] < b[i]; } return false; };
+  const rec = (k) => {
+    if (k === free.length) { const sc = score(); if (!best || better(sc, best.sc)) best = { sc: sc, asg: asg.slice() }; return; }
+    TEAM_IDS.forEach((id) => {
+      if (cnt[id] < 3) { cnt[id]++; asg[free[k]] = id; rec(k + 1); cnt[id]--; asg[free[k]] = null; }
+    });
+  };
+  rec(0);
+  if (!best) return toast('Could not balance with those locks');
+  draft.players.forEach((p, i) => { p.t = best.asg[i]; });
+  setupSheet();
+  toast('Teams balanced');
+}
+
+function saveSetup() {
+  if (me !== ORGANISER || !draft) return closeSheet();
+  syncDraft();
+  const names = draft.players.map((p) => p.n.trim());
+  if (names.some((n) => !n)) return toast('Every player needs a name');
+  if (new Set(names.map((n) => n.toLowerCase())).size !== 9) return toast('Player names must all be different');
+  if (names.indexOf(ORGANISER) < 0) return toast('Keep ' + ORGANISER + ' as a player name to keep setup access');
+  const players = [];
+  for (let i = 0; i < 9; i++) {
+    const p = draft.players[i], h = num(p.h), m = parseInt(p.m || '0', 10);
+    if (isNaN(h) || h < 0 || h > 54) return toast('Handicap for ' + names[i] + ' must be 0 to 54');
+    if (isNaN(m) || m < 0 || m > 9) return toast('Mulligans for ' + names[i] + ' must be 0 to 9');
+    players.push({ n: names[i], h: h, t: p.t, m: m, lock: !!p.lock });
+  }
+  for (let k = 0; k < TEAM_IDS.length; k++) {
+    const id = TEAM_IDS[k];
+    if (players.filter((p) => p.t === id).length !== 3) return toast('Team ' + id + ' needs exactly 3 players');
+  }
+  const allowOverride = {};
+  for (let k = 0; k < TEAM_IDS.length; k++) {
+    const id = TEAM_IDS[k], txt = String(draft.allow[id] || '').trim();
+    if (txt === '') { allowOverride[id] = DEL; continue; }
+    const v = parseInt(txt, 10);
+    if (isNaN(v) || v < 0 || v > 30) return toast('Allowance for Team ' + id + ' must be 0 to 30');
+    allowOverride[id] = v;
+  }
+  const pars = draft.pars.map((x) => { const v = parseInt(x, 10); return v >= 3 && v <= 6 ? v : 4; });
+  const captains = {}, teeTimes = {};
+  TEAM_IDS.forEach((id) => {
+    const ps = players.filter((p) => p.t === id);
+    captains[id] = ps.some((p) => p.n === draft.cap[id]) ? draft.cap[id] : ps.slice().sort((a, b) => a.h - b.h)[0].n;
+    teeTimes[id] = (draft.tee[id] || '').trim();
+  });
+  save({ config: { course: draft.course.trim(), pars: pars, parsSet: true, captains: captains, teeTimes: teeTimes, players: players, allowOverride: allowOverride } });
+  toast('Setup saved');
+  closeSheet();
+}
+
+/* ============================================================
+   7. EVENTS
+   ============================================================ */
+
+function openHole(n) {
+  const id = cardTeam;
+  if (!canEdit(id)) return;
+  const h = state.teams[id].holes[n] || {};
+  edit = { team: id, hole: n,
+    s: typeof h.s === 'number' ? h.s : state.config.pars[n - 1],
+    t: h.t || 'w', d: h.d || '', m: h.m || 0 };
+  holeSheet();
+}
+
+function onAct(el, ev) {
+  const a = el.dataset.act;
+  switch (a) {
+    case 'rules': return rulesSheet();
+    case 'who': return whoSheet();
+    case 'settings': if (me !== ORGANISER) return; draft = newDraft(); return setupSheet();
+    case 'close': return closeSheet();
+    case 'scrim': if (ev.target === el) closeSheet(); return;
+    case 'tab': tab = el.dataset.tab; if (tab === 'cards' && myTeam()) cardTeam = cardTeam || myTeam(); return render();
+    case 'openteam': cardTeam = el.dataset.team; tab = 'cards'; return render();
+    case 'cardteam': cardTeam = el.dataset.team; return render();
+    case 'setme':
+      me = el.dataset.name; localStorage.setItem('golf.me', me);
+      if (myTeam()) cardTeam = myTeam();
+      closeSheet(); return render();
+    case 'edithole': return openHole(Number(el.dataset.hole));
+    case 'sdec': edit.s = Math.max(1, edit.s - 1); $('#sval').textContent = edit.s; return;
+    case 'sinc': edit.s = Math.min(15, edit.s + 1); $('#sval').textContent = edit.s; return;
+    case 'settee': edit.t = el.dataset.v; return holeSheet();
+    case 'setdrive': edit.d = edit.d === el.dataset.name ? '' : el.dataset.name; return holeSheet();
+    case 'mdec': edit.m = Math.max(0, edit.m - 1); $('#mval').textContent = edit.m; return;
+    case 'minc': {
+      const c = calc(edit.team), base = c.mull - ((state.teams[edit.team].holes[edit.hole] || {}).m || 0);
+      if (edit.m + base >= TEAMS[edit.team].mullPool) return toast('No mulligans left');
+      edit.m++; $('#mval').textContent = edit.m; return;
+    }
+    case 'savehole': {
+      if (!canEdit(edit.team)) return closeSheet();
+      const data = { s: edit.s, t: edit.t, d: edit.d || '', m: edit.m || 0 };
+      save({ teams: { [edit.team]: { holes: { [edit.hole]: data } } } });
+      toast('Hole ' + edit.hole + ' saved');
+      return closeSheet();
+    }
+    case 'clearhole':
+      if (!canEdit(edit.team)) return closeSheet();
+      save({ teams: { [edit.team]: { holes: { [edit.hole]: DEL } } } });
+      toast('Hole ' + edit.hole + ' cleared');
+      return closeSheet();
+    case 'savesetup': return saveSetup();
+    case 'balance': return balanceDraft();
+  }
+}
+
+document.addEventListener('click', (ev) => {
+  const el = ev.target.closest('[data-act]');
+  if (el) onAct(el, ev);
+});
+document.addEventListener('change', (ev) => {
+  const el = ev.target;
+  if (!draft || !el.classList || !el.classList.contains('dr')) return;
+  syncDraft();
+  if (el.classList.contains('dteam')) setupSheet(); else updatePreview();
+});
+document.addEventListener('keydown', (ev) => {
+  if (ev.key === 'Escape' && $('#layer').firstChild) closeSheet();
+  if ((ev.key === 'Enter' || ev.key === ' ') && ev.target.matches('tr[data-act]')) { ev.preventDefault(); onAct(ev.target, ev); }
+});
+window.addEventListener('online', () => { if (mode === 'remote') renderStatus(); });
+
+/* ============================================================
+   8. START
+   ============================================================ */
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
+}
+/* Live weather for Perth WA (Open-Meteo, free, no key). Always shows current conditions. */
+const WEATHER = { place: 'Perth WA', lat: -31.95, lon: 115.86 };
+function wxDesc(c) {
+  if (c === 0) return ['\u2600\uFE0F', 'Clear'];
+  if (c <= 2) return ['\u26C5', 'Partly cloudy'];
+  if (c === 3) return ['\u2601\uFE0F', 'Cloudy'];
+  if (c === 45 || c === 48) return ['\uD83C\uDF2B\uFE0F', 'Fog'];
+  if (c >= 51 && c <= 57) return ['\uD83C\uDF26\uFE0F', 'Drizzle'];
+  if (c >= 61 && c <= 67) return ['\uD83C\uDF27\uFE0F', 'Rain'];
+  if (c >= 71 && c <= 77) return ['\u2744\uFE0F', 'Snow'];
+  if (c >= 80 && c <= 82) return ['\uD83C\uDF26\uFE0F', 'Showers'];
+  if (c >= 95) return ['\u26C8\uFE0F', 'Thunderstorms'];
+  return ['\uD83C\uDF21\uFE0F', ''];
+}
+function showWx(w) {
+  const d = wxDesc(w.code);
+  $('#wx').dataset.ok = '1';
+  $('#wx').textContent = WEATHER.place + ': ' + d[0] + ' ' + (d[1] || 'Current') + ' · 🌡️ ' + Math.round(w.temp) + '°C · 💨 ' + Math.round(w.wind) + ' km/h';
+}
+function loadWx() {
+  try { const c = JSON.parse(localStorage.getItem('golf.wx') || 'null'); if (c) showWx(c); } catch (e) {}
+  if (!$('#wx').dataset.ok) $('#wx').textContent = WEATHER.place + ' weather loading';
+  fetch('https://api.open-meteo.com/v1/forecast?latitude=' + WEATHER.lat + '&longitude=' + WEATHER.lon +
+        '&current=temperature_2m,weather_code,wind_speed_10m&timezone=auto')
+    .then((r) => r.json())
+    .then((j) => {
+      const c = j && j.current;
+      if (!c) throw new Error('no weather');
+      const w = { temp: c.temperature_2m, code: c.weather_code, wind: c.wind_speed_10m };
+      try { localStorage.setItem('golf.wx', JSON.stringify(w)); } catch (e) {}
+      showWx(w);
+    })
+    .catch(() => { if (!$('#wx').dataset.ok) $('#wx').textContent = WEATHER.place + ' weather unavailable'; });
+}
+loadWx();
+setInterval(loadWx, 10 * 60 * 1000);
+window.addEventListener('online', loadWx);
+
+startData();
+if (!me) whoSheet();
+})();
+</script>
+</body>
+</html>
