@@ -70,7 +70,9 @@ main{padding:14px 14px 20px;max-width:560px;margin:0 auto}
 .pos{font:700 18px var(--cond);color:#cfe3d7}
 .tname{font:700 21px/1.05 var(--serif);letter-spacing:.2px}
 .hcpbox{padding:4px 14px 10px}
-.hcpbox h3{margin:8px 0 2px;font:700 15px var(--serif);color:var(--board)}
+.hcphead{display:flex;justify-content:space-between;align-items:center;width:100%;margin:6px 0 2px;padding:8px 0;background:none;border:0;border-top:1px solid var(--line);cursor:pointer;text-align:left;font:700 15px var(--serif);color:var(--board)}
+.hcpcue{font:400 13px var(--body);color:var(--mute)}
+.hcpcue i{font-style:normal}
 .hcpsum{margin:6px 0 0;font-size:13px;color:var(--mute)}
 .hcpsum b{color:var(--ink)}
 .hcpt{width:100%;border-collapse:collapse;margin:4px 0;font-size:14px}
@@ -599,11 +601,13 @@ function crestSheet() {
   $('#layer').innerHTML = '<div class="scrim lightbox" data-act="scrim"><div class="lbox" role="dialog" aria-modal="true" aria-label="Lucas Golf Day logo"><button class="lbx" data-act="close" aria-label="Close">&times;</button><img src="icon-512.png" alt="Lucas Golf Day logo"></div></div>';
 }
 function fmtNum(x) { return String(Math.round(x * 100) / 100); }
+let hcpOpen = false;
 function hcpDetails(id) {
   const T = TEAMS[id];
   const ps = T.players.slice().sort((a, b) => a.h - b.h);
   const W = [0.25, 0.15, 0.10], L = ['Lowest', 'Middle', 'Highest'];
-  let html = '<div class="hcpbox"><h3>Team handicap: ' + T.allowance + ' shots</h3>';
+  let html = '<div class="hcpbox"><button type="button" class="hcphead" data-act="hcptoggle" aria-expanded="' + hcpOpen + '"><span>Team handicap: ' + T.allowance + ' shots</span><span class="hcpcue">' + (hcpOpen ? 'Hide' : 'How it works') + ' <i aria-hidden="true">' + (hcpOpen ? '\u25B4' : '\u25BE') + '</i></span></button>';
+  if (!hcpOpen) return html + '</div>';
   if (ps.length !== 3) {
     html += '<p class="note">This team needs exactly 3 players to work out an allowance.</p></div>';
     return html;
@@ -890,6 +894,7 @@ function onAct(el, ev) {
   switch (a) {
     case 'wxretry': return loadWx();
     case 'crest': return crestSheet();
+    case 'hcptoggle': hcpOpen = !hcpOpen; return render();
     case 'rules': return rulesSheet();
     case 'who': return whoSheet();
     case 'settings': if (me !== ORGANISER) return; draft = newDraft(); return setupSheet();

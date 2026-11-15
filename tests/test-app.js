@@ -82,9 +82,16 @@ async function run() {
     check((lb.match(/\(c\)/g) || []).length === 3, 'exactly three captains marked');
     check(!cr.has('[data-act=hcpinfo]'), 'leaderboard hcp is no longer a link');
     cr.click('#tabCards'); cr.click('[data-act=cardteam][data-team=A]');
+    check(!/Lowest/.test(cr.text('.hcpbox')) && /Team handicap: 6 shots/.test(cr.text('.hcpbox')), 'handicap block starts collapsed');
+    check(cr.d.querySelector('.hcphead').getAttribute('aria-expanded') === 'false', 'toggle reports collapsed');
+    cr.click('.hcphead');
+    check(cr.d.querySelector('.hcphead').getAttribute('aria-expanded') === 'true', 'tap expands the handicap block');
     const hb = cr.text('.hcpbox');
     check(/Team handicap: 6 shots/.test(hb) && /Michael/.test(hb) && /11\.4/.test(hb) && /5\.7/.test(hb), 'team card shows the handicap workings: ' + hb.slice(0, 0));
     const kids = Array.from(cr.d.querySelector('.card').children).map((e) => e.className || e.tagName);
+    cr.click('.hcphead');
+    check(!/Lowest/.test(cr.text('.hcpbox')), 'second tap collapses it again');
+    cr.click('.hcphead');
     check(kids.indexOf('hcpbox') > kids.indexOf('sub') && kids.indexOf('hcpbox') < kids.indexOf('TABLE'), 'workings sit between the player list and the scorecard');
     check(/Lachie Team hcp 6/.test(lb) && /Jett Team hcp 6/.test(lb) && /Ron Team hcp 8/.test(lb.replace(' \u00b7',''))|| /Team hcp 6.*Team hcp 6.*Team hcp 8/.test(lb), 'leaderboard shows each team handicap: ' + lb.slice(0, 0));
     cr.click('.crest'); await wait(20);
