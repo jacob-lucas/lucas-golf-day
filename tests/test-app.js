@@ -23,6 +23,7 @@ function boot(me, opts) {
       if (me) w.localStorage.setItem('golf.me', me);
       if (opts.storage) Object.keys(opts.storage).forEach((k) => w.localStorage.setItem(k, opts.storage[k]));
       w.fetch = (u) => {
+        if (opts.build && /build\.json/.test(u)) return Promise.resolve({ ok: true, status: 200, json: () => Promise.resolve(opts.build) });
         if (opts.wttr && /wttr\.in/.test(u)) return Promise.resolve({ ok: true, status: 200, json: () => Promise.resolve(opts.wttr) });
         if (opts.wxStatus) return Promise.resolve({ ok: false, status: opts.wxStatus, json: () => Promise.resolve({}) });
         if (opts.wxReject) return Promise.reject(new Error(opts.wxReject));
@@ -71,6 +72,11 @@ async function run() {
     check(/Too many requests/.test(e3.text('#wx')), 'API error reason is shown: ' + e3.text('#wx'));
     const e4 = boot('Jacob', { wxReject: 'Load failed', wttr: { current_condition: [{ temp_C: '31', weatherCode: '113', windspeedKmph: '12' }] } }); await wait(100);
     check(/31/.test(e4.text('#wx')) && /Clear/.test(e4.text('#wx')), 'falls back to wttr.in when Open-Meteo fails: ' + e4.text('#wx'));
+    const bi = boot('Jacob', { build: { commit: 'abcdef1234567890', time: '2026-11-15T05:30:00Z' } }); await wait(100);
+    bi.click('#btnSettings'); await wait(50);
+    const bl = bi.d.querySelector('#buildinfo a');
+    check(bl && /commit\/abcdef1234567890$/.test(bl.href) && /abcdef1/.test(bl.textContent), 'Setup footer links to the build commit: ' + (bl && bl.href));
+    check(/1:30 pm|1:30 PM/i.test(bi.text('#buildinfo')), 'build time shown in Perth time: ' + bi.text('#buildinfo'));
     check(e3.has('#wx[data-act=wxretry]'), 'weather line is tappable to retry');
   }
 

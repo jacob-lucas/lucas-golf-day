@@ -1,5 +1,5 @@
 // Bump CACHE when you change any app file so phones pick up the update.
-const CACHE = 'golf-day-v15';
+const CACHE = 'golf-day-v16';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './icon-maskable-512.png'];
 
 self.addEventListener('install', (e) => {
@@ -23,7 +23,10 @@ self.addEventListener('fetch', (e) => {
   if (url.hostname.endsWith('googleapis.com')) return;
 
   // Weather must always be fresh, so never serve it from the cache.
-  if (url.hostname === 'api.open-meteo.com') return;
+  if (url.hostname === 'api.open-meteo.com' || url.hostname === 'wttr.in') return;
+
+  // Build info must always be fresh.
+  if (url.pathname.endsWith('/build.json')) return;
 
   // Pages: network first so updates arrive, cached copy when offline.
   if (req.mode === 'navigate') {
