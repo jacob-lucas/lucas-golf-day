@@ -77,6 +77,11 @@ async function run() {
     const bl = bi.d.querySelector('#buildinfo a');
     check(bl && /commit\/abcdef1234567890$/.test(bl.href) && /abcdef1/.test(bl.textContent), 'Setup footer links to the build commit: ' + (bl && bl.href));
     check(/1:30 pm|1:30 PM/i.test(bi.text('#buildinfo')), 'build time shown in Perth time: ' + bi.text('#buildinfo'));
+    const cr = boot('Ken'); await wait(50);
+    cr.click('.crest'); await wait(20);
+    check(cr.has('.lbox img') && cr.has('.lbx'), 'tapping the crest opens a larger image with an X');
+    cr.click('.lbx'); await wait(20);
+    check(!cr.has('.lbox'), 'X closes the crest image');
     check(e3.has('#wx[data-act=wxretry]'), 'weather line is tappable to retry');
   }
 

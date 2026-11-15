@@ -115,6 +115,11 @@ nav button{flex:1;border:0;background:none;padding:12px 0 14px;font:700 16px var
 nav button[aria-current=page]{color:var(--board);box-shadow:inset 0 3px 0 var(--board)}
 
 /* Sheets */
+.crest{cursor:pointer}
+.lightbox{align-items:center}
+.lbox{position:relative;background:#fff;border-radius:16px;padding:14px;border:3px solid var(--gold);box-shadow:0 10px 40px rgba(0,0,0,.5);max-width:min(86vw,440px)}
+.lbox img{display:block;width:100%;height:auto;max-height:70vh;object-fit:contain}
+.lbx{position:absolute;top:6px;right:6px;width:28px;height:28px;border-radius:50%;border:0;background:var(--board);color:#fff;font:700 16px/1 var(--serif);cursor:pointer;padding:0}
 .scrim{position:fixed;inset:0;background:rgba(10,30,20,.55);z-index:10;display:flex;align-items:flex-end;justify-content:center}
 .sheet{background:var(--paper);width:100%;max-width:560px;border-radius:16px 16px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom,0px));
   max-height:92vh;overflow:auto;animation:up .18s ease-out}
@@ -169,7 +174,7 @@ input[type=text],select,input[type=number]{width:100%;padding:11px;border:1px so
 
 <header>
   <div class="hrow">
-    <img class="crest" src="icon-192.png" alt="Lucas family crest" width="56" height="56">
+    <img class="crest" src="icon-192.png" alt="Lucas family crest, tap to enlarge" width="56" height="56" role="button" tabindex="0" data-act="crest">
     <div class="title">
       <h1>Lucas Golf Day 2026</h1>
     </div>
@@ -567,6 +572,9 @@ function render() {
 function openSheet(html) {
   $('#layer').innerHTML = '<div class="scrim" data-act="scrim"><div class="sheet" role="dialog" aria-modal="true">' + html + '</div></div>';
 }
+function crestSheet() {
+  $('#layer').innerHTML = '<div class="scrim lightbox" data-act="scrim"><div class="lbox" role="dialog" aria-modal="true" aria-label="Lucas family crest"><button class="lbx" data-act="close" aria-label="Close">&times;</button><img src="icon-512.png" alt="Lucas family crest"></div></div>';
+}
 function closeSheet() { $('#layer').innerHTML = ''; edit = null; draft = null; }
 
 function rulesSheet() {
@@ -823,6 +831,7 @@ function onAct(el, ev) {
   const a = el.dataset.act;
   switch (a) {
     case 'wxretry': return loadWx();
+    case 'crest': return crestSheet();
     case 'rules': return rulesSheet();
     case 'who': return whoSheet();
     case 'settings': if (me !== ORGANISER) return; draft = newDraft(); return setupSheet();
