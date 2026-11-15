@@ -69,6 +69,7 @@ main{padding:14px 14px 20px;max-width:560px;margin:0 auto}
 .brow:active{background:var(--board2)}
 .pos{font:700 18px var(--cond);color:#cfe3d7}
 .tname{font:700 21px/1.05 var(--serif);letter-spacing:.2px}
+.tallow{color:var(--gold);white-space:nowrap}
 .tplay{display:block;font:400 12px/1.3 var(--body);color:#9cc2ad;margin-top:3px}
 .num{font:700 30px/1 var(--cond);text-align:right;font-variant-numeric:tabular-nums}
 .num.under{color:var(--red)}
@@ -511,7 +512,7 @@ function renderBoard() {
     const names = TEAMS[r.id].players.map((p) => p.n + (p.n === state.config.captains[r.id] ? ' (c)' : '')).join(', ');
     return '<button class="brow" data-act="openteam" data-team="' + r.id + '">' +
       '<span class="pos">' + pos + '</span>' +
-      '<span><span class="tname">' + esc(TEAMS[r.id].name) + '</span><span class="tplay">' + esc(names) + '</span></span>' +
+      '<span><span class="tname">' + esc(TEAMS[r.id].name) + '</span><span class="tplay">' + esc(names) + '<span class="tallow"> &middot; Team hcp ' + TEAMS[r.id].allowance + '</span></span></span>' +
       '<span class="num' + (started && c.net2par < 0 ? ' under' : '') + '">' + net + '</span>' +
       '<span class="num small' + (started && c.gross2par < 0 ? ' under' : '') + '">' + gr + '</span>' +
       '<span class="thru">' + thru + '</span></button>';

@@ -80,6 +80,7 @@ async function run() {
     const lb = cr.text('#main');
     check(/Michael \(c\), Matt, Lachie/.test(lb) && /Jacob \(c\), Stu, Jett/.test(lb) && /Ken \(c\), Adam, Ron/.test(lb), 'leaderboard marks each captain with (c): ' + lb.slice(0, 0));
     check((lb.match(/\(c\)/g) || []).length === 3, 'exactly three captains marked');
+    check(/Lachie Team hcp 6/.test(lb) && /Jett Team hcp 6/.test(lb) && /Ron Team hcp 8/.test(lb.replace(' \u00b7',''))|| /Team hcp 6.*Team hcp 6.*Team hcp 8/.test(lb), 'leaderboard shows each team handicap: ' + lb.slice(0, 0));
     cr.click('.crest'); await wait(20);
     check(cr.has('.lbox img') && cr.has('.lbx'), 'tapping the crest opens a larger image with an X');
     cr.click('.lbx'); await wait(20);
