@@ -1,0 +1,216 @@
+// Logic tests for the Lucas Golf Day app. Runs the real index.html in a simulated
+// browser (jsdom) in demo mode, with the Firebase scripts and network stubbed out.
+//
+// Usage:  npm install && npm test            (tests ../index.html)
+//         node test-app.js path/to/index.html
+const { JSDOM } = require('jsdom');
+const fs = require('fs');
+const path = require('path');
+
+const file = path.resolve(process.argv[2] || path.join(__dirname, '..', 'index.html'));
+const html = fs.readFileSync(file, 'utf8').replace(/<script src="https:[^>]*><\/script>/g, '');
+
+let pass = 0, fail = 0;
+const check = (cond, msg) => { if (cond) { pass++; console.log('  PASS ' + msg); } else { fail++; console.log('  FAIL ' + msg); } };
+const section = (t) => console.log('\n' + t);
+
+function boot(me, opts) {
+  opts = opts || {};
+  const dom = new JSDOM(html, {
+    runScripts: 'dangerously', url: 'https://test.local/', pretendToBeVisual: true,
+    beforeParse(w) {
+      if (me) w.localStorage.setItem('golf.me', me);
+      if (opts.storage) Object.keys(opts.storage).forEach((k) => w.localStorage.setItem(k, opts.storage[k]));
+      w.fetch = () => (opts.wx ? Promise.resolve({ json: () => Promise.resolve(opts.wx) }) : new Promise(() => {}));
+    }
+  });
+  const w = dom.window, d = w.document;
+  const click = (sel) => { const e = d.querySelector(sel); if (!e) throw new Error('missing ' + sel); e.dispatchEvent(new w.MouseEvent('click', { bubbles: true })); };
+  const change = (sel) => { d.querySelector(sel).dispatchEvent(new w.Event('change', { bubbles: true })); };
+  const has = (sel) => !!d.querySelector(sel);
+  const text = (sel) => (d.querySelector(sel) ? d.querySelector(sel).textContent.replace(/\s+/g, ' ').trim() : '');
+  return { dom, w, d, click, change, has, text };
+}
+const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+
+async function run() {
+  // ---------- 1. Start-up ----------
+  section('1. Start-up');
+  {
+    const a = boot('Jacob'); await wait(50);
+    check(a.text('h1') === 'Lucas Golf Day 2026', 'title is Lucas Golf Day 2026');
+    check(/Demo mode/.test(a.text('#statusText')), 'demo mode shown without Firebase config (' + a.text('#statusText') + ')');
+    check(a.d.querySelectorAll('.brow').length === 3, 'leaderboard lists 3 teams');
+    check(/Course.*To be confirmed/.test(a.text('.info')), 'course shows To be confirmed');
+    check(a.has('.dateline'), 'date line present');
+    const n = boot(null); await wait(50);
+    check(n.has('.scrim'), 'new visitor is asked to pick a name');
+  }
+
+  // ---------- 2. Weather ----------
+  section('2. Weather line');
+  {
+    const a = boot('Jacob', { wx: { current: { temperature_2m: 27.4, weather_code: 1, wind_speed_10m: 14.2 } } }); await wait(100);
+    const t = a.text('#wx');
+    check(/Perth WA/.test(t) && /27/.test(t) && /14 km\/h/.test(t) && /Partly cloudy/.test(t), 'shows Perth WA conditions: ' + t);
+    const b = boot('Jacob'); await wait(50);
+    check(/Perth WA weather loading/.test(b.text('#wx')), 'shows loading text while waiting: ' + b.text('#wx'));
+  }
+
+  // ---------- 3. Access control ----------
+  section('3. Access control');
+  {
+    const k = boot('Ken'); await wait(50);
+    check(k.d.querySelector('#btnSettings').classList.contains('hidden'), 'Setup button hidden for Ken');
+    k.d.querySelector('#btnSettings').dispatchEvent(new k.w.MouseEvent('click', { bubbles: true }));
+    check(!k.has('#fCourse'), 'Setup does not open for Ken');
+    const j = boot('Jacob'); await wait(50);
+    check(!j.d.querySelector('#btnSettings').classList.contains('hidden'), 'Setup button visible for Jacob');
+  }
+
+  // ---------- 4. Captain and read-only scorecards ----------
+  section('4. Captains and read-only cards');
+  {
+    const j = boot('Jacob'); await wait(50);
+    j.click('#tabCards');
+    j.click('[data-act=cardteam][data-team=A]');
+    check(j.d.querySelectorAll('tr.edit').length === 0, 'Jacob cannot edit Team A');
+    check(/View only/.test(j.text('.who-line')), 'Team A shows View only');
+    j.click('[data-act=cardteam][data-team=B]');
+    check(j.d.querySelectorAll('tr.edit').length === 9, 'Jacob can edit all 9 holes of Team B');
+    const k = boot('Ken'); await wait(50);
+    k.click('#tabCards'); k.click('[data-act=cardteam][data-team=C]');
+    check(k.d.querySelectorAll('tr.edit').length === 9, 'Ken can edit Team C');
+    k.click('[data-act=cardteam][data-team=B]');
+    check(k.d.querySelectorAll('tr.edit').length === 0, 'Ken cannot edit Team B');
+    const a = boot('Adam'); await wait(50);
+    a.click('#tabCards');
+    check(['A', 'B', 'C'].every((t) => { a.click('[data-act=cardteam][data-team=' + t + ']'); return a.d.querySelectorAll('tr.edit').length === 0; }), 'Adam is view only on every team');
+  }
+
+  // ---------- 5. Entering scores, tee choice, drives, mulligans ----------
+  section('5. Scoring');
+  {
+    const j = boot('Jacob'); await wait(50);
+    j.click('#tabCards'); j.click('[data-act=cardteam][data-team=B]');
+    j.click('tr[data-hole="1"]');
+    check(j.text('.sheet h2') === 'Team B, hole 1', 'hole editor opens for hole 1');
+    j.click('[data-act=sinc]'); j.click('[data-act=sinc]');
+    check(j.text('#sval') === '6', 'stepper moves par 4 up to 6');
+    j.click('[data-act=settee][data-v=b]');
+    j.click('[data-act=setdrive][data-name=Stu]');
+    j.click('[data-act=minc]'); j.click('[data-act=minc]');
+    check(j.text('#mval') === '2', 'two mulligans recorded');
+    j.click('[data-act=savehole]');
+    const row = j.d.querySelector('tr[data-hole="1"]');
+    check(/6/.test(row.querySelector('.sc').textContent), 'hole 1 score saved as 6');
+    check(/Back -1/.test(row.textContent) && /Stu/.test(row.textContent), 'tee choice and drive shown on the card');
+    check(/used on hole 1/.test(j.text('.tally')), 'tally shows tee choice used on hole 1');
+    check(/Stu 1\/3/.test(j.text('.tally')), 'tally shows Stu 1/3 drives');
+    check(/Mulligans left: 1 of 3/.test(j.text('.tally')), 'tally shows 1 of 3 mulligans left (' + j.text('.tally') + ')');
+
+    j.click('tr[data-hole="2"]');
+    check(j.d.querySelector('[data-act=settee][data-v=f]').disabled && j.d.querySelector('[data-act=settee][data-v=b]').disabled, 'tee choice locked on hole 2 after use');
+    check(!j.d.querySelector('[data-act=settee][data-v=w]').disabled, 'white tees still selectable');
+    j.click('[data-act=minc]');
+    check(j.text('#mval') === '1', 'one more mulligan allowed');
+    j.click('[data-act=minc]');
+    check(j.text('#mval') === '1', 'mulligans stop at the team limit');
+    j.click('[data-act=close]');
+
+    // Leaderboard: adjusted 5 vs par 4 = +1 gross; allowance 6 x 1/9 rounds to 1; net 0 = E
+    j.click('#tabBoard');
+    const b = j.d.querySelector('.brow[data-team=B]');
+    const nums = b.querySelectorAll('.num');
+    check(nums[0].textContent === 'E' && nums[1].textContent === '+1', 'leaderboard Team B net E, gross +1 (' + nums[0].textContent + ', ' + nums[1].textContent + ')');
+    check(b.querySelector('.thru').textContent === '1', 'thru shows 1');
+    check(j.d.querySelector('.brow').getAttribute('data-team') === 'B', 'Team B leads the board');
+
+    // Clear hole
+    j.click('#tabCards'); j.click('tr[data-hole="1"]'); j.click('[data-act=clearhole]');
+    check(!/6/.test(j.d.querySelector('tr[data-hole="1"] .sc').textContent), 'clearing a hole removes the score');
+  }
+
+  // ---------- 6. Setup: course, balance, overrides, validation ----------
+  section('6. Setup');
+  {
+    const j = boot('Jacob'); await wait(50);
+    j.click('#btnSettings');
+    check(j.has('#fCourse'), 'Setup opens for Jacob');
+    check(j.d.querySelectorAll('.prow:not(.phead)').length === 9, 'nine player rows');
+    check(/6 shots/.test(j.text('#tmAA')) && /6 shots/.test(j.text('#tmAB')) && /8 shots/.test(j.text('#tmAC')), 'automatic allowances are 6, 6 and 8');
+
+    j.d.querySelector('#fCourse').value = 'Test Golf Club';
+    ['A', 'B', 'C'].forEach((t, i) => { j.d.querySelector('#fTee' + t).value = (8 + i) + ':00 am'; });
+    [4, 4, 3, 5, 4, 4, 3, 4, 5].forEach((p, i) => { j.d.querySelector('#fPar' + i).value = String(p); });
+
+    // Balance from an unfair split, nothing locked
+    const hs = [6, 15, 25, 25, 30, 54, 54, 54, 25];
+    const tm = ['A', 'A', 'A', 'B', 'B', 'B', 'C', 'C', 'C'];
+    for (let i = 0; i < 9; i++) { j.d.querySelector('#pH' + i).value = String(hs[i]); j.d.querySelector('#pT' + i).value = tm[i]; j.d.querySelector('#pL' + i).checked = false; }
+    j.change('#pT0');
+    const rangeOf = () => { const v = ['A', 'B', 'C'].map((t) => parseInt((j.text('#tmA' + t).match(/(\d+) shots/) || [0, 0])[1], 10)); return Math.max.apply(null, v) - Math.min.apply(null, v); };
+    const before = rangeOf();
+    j.click('[data-act=balance]');
+    const after = rangeOf();
+    const sizes = { A: 0, B: 0, C: 0 };
+    for (let i = 0; i < 9; i++) sizes[j.d.querySelector('#pT' + i).value]++;
+    check(sizes.A === 3 && sizes.B === 3 && sizes.C === 3, 'balance gives 3 players per team');
+    check(after < before, 'balance narrows the allowance gap (' + before + ' shots to ' + after + ')');
+
+    // Lock Matt+Lachie and Stu+Jett back to the real line-up, then balance
+    const names = ['Michael', 'Matt', 'Lachie', 'Jacob', 'Stu', 'Jett', 'Ken', 'Adam', 'Ron'];
+    const real = [6, 30, 54, 15, 25, 54, 25, 25, 54], realT = ['A', 'A', 'A', 'B', 'B', 'B', 'C', 'C', 'C'];
+    for (let i = 0; i < 9; i++) { j.d.querySelector('#pN' + i).value = names[i]; j.d.querySelector('#pH' + i).value = String(real[i]); j.d.querySelector('#pT' + i).value = realT[i]; j.d.querySelector('#pL' + i).checked = false; }
+    ['Matt', 'Lachie', 'Stu', 'Jett'].forEach((n) => { j.d.querySelector('#pL' + names.indexOf(n)).checked = true; });
+    j.change('#pT0');
+    j.d.querySelector('#pT' + names.indexOf('Michael')).value = 'C';  // push Michael away from his pair, balance should handle it
+    j.click('[data-act=balance]');
+    const tOf = (n) => j.d.querySelector('#pT' + names.indexOf(n)).value;
+    check(tOf('Matt') === tOf('Lachie'), 'locked pair Matt and Lachie stay together');
+    check(tOf('Stu') === tOf('Jett'), 'locked pair Stu and Jett stay together');
+
+    // Manual override and save
+    j.d.querySelector('#fAllowC').value = '10'; j.change('#fAllowC');
+    j.click('[data-act=savesetup]');
+    check(!j.has('#fCourse'), 'valid setup saves and closes');
+    check(/Test Golf Club/.test(j.text('.info')) && /8:00 am/.test(j.text('.info')), 'details card shows saved course and tee times');
+    j.click('[data-act=rules]');
+    check(/C: 10/.test(j.text('.rules')), 'rules show overridden Team C allowance of 10');
+    j.click('[data-act=close]');
+
+    // Validation
+    j.click('#btnSettings');
+    j.d.querySelector('#pT0').value = 'B'; j.change('#pT0');
+    j.click('[data-act=savesetup]');
+    check(j.has('#fCourse') && /exactly 3/.test(j.text('#toast')), 'save blocked when a team has the wrong size');
+    j.click('[data-act=close]');
+    j.click('#btnSettings');
+    j.d.querySelector('#pN3').value = 'Someone'; j.d.querySelector('#pN3').dispatchEvent(new j.w.Event('change', { bubbles: true }));
+    const jacobRow = names.indexOf('Jacob');
+    j.d.querySelector('#pN' + jacobRow).value = 'Jake';
+    j.click('[data-act=savesetup]');
+    check(j.has('#fCourse') && /Keep Jacob/.test(j.text('#toast')), 'cannot remove Jacob from the player list (' + j.text('#toast') + ')');
+    j.click('[data-act=close]');
+    j.click('#btnSettings');
+    j.d.querySelector('#pH1').value = '99';
+    j.click('[data-act=savesetup]');
+    check(j.has('#fCourse') && /0 to 54/.test(j.text('#toast')), 'handicap above 54 is rejected');
+  }
+
+  // ---------- 7. Rules sheet ----------
+  section('7. Rules sheet');
+  {
+    const a = boot('Adam'); await wait(50);
+    a.click('[data-act=rules]');
+    const r = a.text('.rules');
+    check(/Lachie and Jett get 3 free do-overs each/.test(r), 'mulligan rule names Lachie and Jett');
+    check(/A: 6, B: 6, C: 8/.test(r), 'allowances listed as A: 6, B: 6, C: 8');
+    check(/white tees/i.test(r) && /Tiebreaker/.test(r), 'tees and tiebreaker rules present');
+    check(!/side prize/i.test(r), 'no side prizes');
+  }
+
+  console.log('\n' + pass + ' passed, ' + fail + ' failed');
+  process.exit(fail ? 1 : 0);
+}
+run().catch((e) => { console.error('Test run crashed:', e); process.exit(2); });

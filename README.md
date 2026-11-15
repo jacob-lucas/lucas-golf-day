@@ -94,3 +94,8 @@ Each person picks their name the first time they open the app (tap "You: name" a
 1. Do a test round with two or three phones: score a hole as a captain, and check it appears on the other phones.
 2. Switch one phone to airplane mode, score a hole, then switch it back and confirm it syncs.
 3. Once you book the course, enter the pars in Setup.
+
+## Testing
+
+- `tests/test-app.js` runs 50 automatic checks on the app logic (scoring, captains, Setup, balance, rules). From the `tests` folder run `npm install` then `npm test`. It needs Node.js.
+- `tests/LIVE-TEST-PLAN.md` is a step by step checklist for testing the hosted app on real phones.
