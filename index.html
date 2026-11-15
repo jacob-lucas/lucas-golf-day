@@ -884,29 +884,51 @@ function showWx(w) {
   $('#wx').textContent = WEATHER.place + ': ' + d[0] + ' ' + (d[1] || 'Current') + ' · 🌡️ ' + Math.round(w.temp) + '°C · 💨 ' + Math.round(w.wind) + ' km/h';
   $('#wx').dataset.ok = '1';
 }
-let wxTimer = null;
+function wxGet(url, ms) {
+  const ctl = typeof AbortController === 'function' ? new AbortController() : null;
+  const timer = setTimeout(() => { if (ctl) ctl.abort(); }, ms);
+  return fetch(url, { cache: 'no-store', referrerPolicy: 'no-referrer', signal: ctl ? ctl.signal : undefined })
+    .then((r) => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+    .then((j) => { clearTimeout(timer); return j; }, (e) => { clearTimeout(timer); throw e; });
+}
+const WTTR_TO_WMO = { 113: 0, 116: 1, 119: 3, 122: 3, 143: 45, 248: 45, 260: 45, 176: 80, 353: 80, 356: 80, 359: 80,
+  263: 51, 266: 51, 293: 51, 296: 51, 299: 61, 302: 61, 305: 61, 308: 61, 200: 95, 386: 95, 389: 95, 392: 95, 395: 95 };
+function wttrCode(n) {
+  n = Number(n);
+  if (WTTR_TO_WMO[n] !== undefined) return WTTR_TO_WMO[n];
+  if ([179, 227, 230, 323, 326, 329, 332, 335, 338, 368, 371].indexOf(n) >= 0) return 71;
+  if (n >= 182 && n <= 377) return 61;
+  return 3;
+}
+function wxFromOpenMeteo() {
+  const url = 'https://api.open-meteo.com/v1/forecast?latitude=' + WEATHER.lat + '&longitude=' + WEATHER.lon +
+              '&current=temperature_2m,weather_code,wind_speed_10m&timezone=auto';
+  return wxGet(url, 7000).then((j) => {
+    const c = j && j.current;
+    if (!c) throw new Error((j && j.reason) || 'no data returned');
+    return { temp: c.temperature_2m, code: c.weather_code, wind: c.wind_speed_10m };
+  });
+}
+function wxFromWttr() {
+  return wxGet('https://wttr.in/' + WEATHER.lat + ',' + WEATHER.lon + '?format=j1', 9000).then((j) => {
+    const c = j && j.current_condition && j.current_condition[0];
+    if (!c) throw new Error('no data returned');
+    return { temp: Number(c.temp_C), code: wttrCode(c.weatherCode), wind: Number(c.windspeedKmph) };
+  });
+}
 function loadWx() {
   const el = $('#wx');
   try { const c = JSON.parse(localStorage.getItem('golf.wx') || 'null'); if (c) showWx(c); } catch (e) {}
   if (!el.dataset.ok) el.textContent = WEATHER.place + ' weather loading';
-  const ctl = typeof AbortController === 'function' ? new AbortController() : null;
-  const timer = setTimeout(() => { if (ctl) ctl.abort(); }, 10000);
-  const url = 'https://api.open-meteo.com/v1/forecast?latitude=' + WEATHER.lat + '&longitude=' + WEATHER.lon +
-              '&current=temperature_2m,weather_code,wind_speed_10m&timezone=auto';
-  fetch(url, { cache: 'no-store', referrerPolicy: 'no-referrer', signal: ctl ? ctl.signal : undefined })
-    .then((r) => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
-    .then((j) => {
-      clearTimeout(timer);
-      const c = j && j.current;
-      if (!c) throw new Error((j && j.reason) || 'no data returned');
-      const w = { temp: c.temperature_2m, code: c.weather_code, wind: c.wind_speed_10m };
+  const why = (e) => e && e.name === 'AbortError' ? 'timed out' : String((e && e.message) || e || 'error').slice(0, 40);
+  wxFromOpenMeteo()
+    .catch((e1) => wxFromWttr().catch((e2) => { throw new Error(why(e1) + ' / ' + why(e2)); }))
+    .then((w) => {
       try { localStorage.setItem('golf.wx', JSON.stringify(w)); } catch (e) {}
       showWx(w);
     })
     .catch((e) => {
-      clearTimeout(timer);
-      const why = e && e.name === 'AbortError' ? 'timed out' : String((e && e.message) || e || 'error').slice(0, 40);
-      if (!el.dataset.ok) el.textContent = WEATHER.place + ' weather unavailable (' + why + '). Tap to retry';
+      if (!el.dataset.ok) el.textContent = WEATHER.place + ' weather unavailable (' + String(e.message).slice(0, 60) + '). Tap to retry';
     });
 }
 loadWx();

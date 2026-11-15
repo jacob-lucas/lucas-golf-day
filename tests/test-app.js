@@ -22,7 +22,8 @@ function boot(me, opts) {
     beforeParse(w) {
       if (me) w.localStorage.setItem('golf.me', me);
       if (opts.storage) Object.keys(opts.storage).forEach((k) => w.localStorage.setItem(k, opts.storage[k]));
-      w.fetch = () => {
+      w.fetch = (u) => {
+        if (opts.wttr && /wttr\.in/.test(u)) return Promise.resolve({ ok: true, status: 200, json: () => Promise.resolve(opts.wttr) });
         if (opts.wxStatus) return Promise.resolve({ ok: false, status: opts.wxStatus, json: () => Promise.resolve({}) });
         if (opts.wxReject) return Promise.reject(new Error(opts.wxReject));
         return opts.wx ? Promise.resolve({ ok: true, status: 200, json: () => Promise.resolve(opts.wx) }) : new Promise(() => {});
@@ -63,11 +64,13 @@ async function run() {
     const b = boot('Jacob'); await wait(50);
     check(/Perth WA weather loading/.test(b.text('#wx')), 'shows loading text while waiting: ' + b.text('#wx'));
     const e1 = boot('Jacob', { wxStatus: 429 }); await wait(100);
-    check(/unavailable \(HTTP 429\)/.test(e1.text('#wx')) && /Tap to retry/.test(e1.text('#wx')), 'HTTP error is shown with a reason: ' + e1.text('#wx'));
+    check(/unavailable \(HTTP 429/.test(e1.text('#wx')) && /Tap to retry/.test(e1.text('#wx')), 'HTTP error is shown with a reason: ' + e1.text('#wx'));
     const e2 = boot('Jacob', { wxReject: 'Load failed' }); await wait(100);
-    check(/unavailable \(Load failed\)/.test(e2.text('#wx')), 'network failure is shown with a reason: ' + e2.text('#wx'));
+    check(/unavailable \(Load failed/.test(e2.text('#wx')), 'network failure is shown with a reason: ' + e2.text('#wx'));
     const e3 = boot('Jacob', { wx: { error: true, reason: 'Too many requests' } }); await wait(100);
     check(/Too many requests/.test(e3.text('#wx')), 'API error reason is shown: ' + e3.text('#wx'));
+    const e4 = boot('Jacob', { wxReject: 'Load failed', wttr: { current_condition: [{ temp_C: '31', weatherCode: '113', windspeedKmph: '12' }] } }); await wait(100);
+    check(/31/.test(e4.text('#wx')) && /Clear/.test(e4.text('#wx')), 'falls back to wttr.in when Open-Meteo fails: ' + e4.text('#wx'));
     check(e3.has('#wx[data-act=wxretry]'), 'weather line is tappable to retry');
   }
 
