@@ -77,6 +77,9 @@ async function run() {
     check(bl && /commit\/abcdef1234567890$/.test(bl.href) && /abcdef1/.test(bl.textContent), 'Leaderboard footer links to the build commit: ' + (bl && bl.href));
     check(/1:30 pm|1:30 PM/i.test(bi.text('#buildinfo')), 'build time shown in Perth time: ' + bi.text('#buildinfo'));
     const cr = boot('Ken'); await wait(50);
+    const lb = cr.text('#main');
+    check(/Michael \(c\), Matt, Lachie/.test(lb) && /Jacob \(c\), Stu, Jett/.test(lb) && /Ken \(c\), Adam, Ron/.test(lb), 'leaderboard marks each captain with (c): ' + lb.slice(0, 0));
+    check((lb.match(/\(c\)/g) || []).length === 3, 'exactly three captains marked');
     cr.click('.crest'); await wait(20);
     check(cr.has('.lbox img') && cr.has('.lbx'), 'tapping the crest opens a larger image with an X');
     cr.click('.lbx'); await wait(20);

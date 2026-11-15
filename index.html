@@ -508,7 +508,7 @@ function renderBoard() {
     const net = started ? fmtPar(c.net2par) : '-';
     const gr = started ? fmtPar(c.gross2par) : '-';
     const thru = c.thru === 9 ? 'F' : started ? String(c.thru) : '-';
-    const names = TEAMS[r.id].players.map((p) => p.n).join(', ');
+    const names = TEAMS[r.id].players.map((p) => p.n + (p.n === state.config.captains[r.id] ? ' (c)' : '')).join(', ');
     return '<button class="brow" data-act="openteam" data-team="' + r.id + '">' +
       '<span class="pos">' + pos + '</span>' +
       '<span><span class="tname">' + esc(TEAMS[r.id].name) + '</span><span class="tplay">' + esc(names) + '</span></span>' +
