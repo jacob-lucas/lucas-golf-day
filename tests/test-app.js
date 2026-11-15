@@ -200,11 +200,21 @@ async function run() {
 
     // Manual override and save
     j.d.querySelector('#fAllowC').value = '10'; j.change('#fAllowC');
+    // Duplicate team names are rejected
+    j.d.querySelector('#fNameA').value = 'Eagles'; j.change('#fNameA');
+    j.d.querySelector('#fNameB').value = ' eagles '; j.change('#fNameB');
+    j.click('[data-act=savesetup]');
+    check(j.has('#fCourse'), 'duplicate team names block saving');
+    // Rename teams (C keeps its default name)
+    j.d.querySelector('#fNameB').value = 'Birdies'; j.change('#fNameB');
+    check(/Birdies/.test(j.text('#tmTB')), 'tee time label follows the team name: ' + j.text('#tmTB'));
     j.click('[data-act=savesetup]');
     check(!j.has('#fCourse'), 'valid setup saves and closes');
+    check(/Eagles/.test(j.text('#main')) && /Birdies/.test(j.text('#main')) && /Team C/.test(j.text('#main')), 'leaderboard shows the new team names');
     check(/Test Golf Club/.test(j.text('.info')) && /8:00 am/.test(j.text('.info')), 'details card shows saved course and tee times');
     j.click('[data-act=rules]');
     check(/C: 10/.test(j.text('.rules')), 'rules show overridden Team C allowance of 10');
+    check(/Eagles: \d+, Birdies: \d+, Team C: 10/.test(j.text('.rules')), 'rules list allowances by team name: ' + j.text('.rules').slice(0,0));
     j.click('[data-act=close]');
 
     // Validation
@@ -233,7 +243,7 @@ async function run() {
     a.click('[data-act=rules]');
     const r = a.text('.rules');
     check(/Lachie and Jett get 3 free do-overs each/.test(r), 'mulligan rule names Lachie and Jett');
-    check(/A: 6, B: 6, C: 8/.test(r), 'allowances listed as A: 6, B: 6, C: 8');
+    check(/Team A: 6, Team B: 6, Team C: 8/.test(r), 'allowances listed as Team A: 6, Team B: 6, Team C: 8');
     check(/white tees/i.test(r) && /Tiebreaker/.test(r), 'tees and tiebreaker rules present');
     check(!/side prize/i.test(r), 'no side prizes');
   }

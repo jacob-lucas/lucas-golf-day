@@ -160,6 +160,9 @@ input[type=text],select,input[type=number]{width:100%;padding:11px;border:1px so
 .prow input[type=checkbox]{width:22px;height:22px;justify-self:center}
 .tm{border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:0 0 10px}
 .tmn{color:var(--mute);font-size:13px}
+.tmname{display:block;font-size:13px;color:var(--mute)}
+.tmname input{margin-top:3px}
+.tm .tmn{margin:6px 0 2px}
 .tmr{display:grid;grid-template-columns:1fr 1fr;gap:8px 10px;margin-top:8px}
 .tmr label{display:block;font-size:13px;color:var(--mute)}
 .tmr small{grid-column:1/-1;color:var(--mute)}
@@ -265,6 +268,7 @@ function autoAllowance(hs) {
   return (0.25 * a[0] + 0.15 * a[1] + 0.10 * a[2]) / 2;
 }
 
+const TEAM_NAME_MAX = 16;
 function cleanPlayers(arr) {
   if (!Array.isArray(arr) || arr.length !== 9) return DEFAULT_PLAYERS.map((p) => Object.assign({}, p));
   return arr.map((p, i) => {
@@ -295,8 +299,14 @@ function norm(r) {
     const v = c.allowOverride && c.allowOverride[id];
     if (typeof v === 'number' && v >= 0) ov[id] = v;
   });
+  const tn = {};
+  TEAM_IDS.forEach((id) => {
+    const v = c.teamNames && typeof c.teamNames[id] === 'string' ? c.teamNames[id].trim().slice(0, TEAM_NAME_MAX) : '';
+    if (v) tn[id] = v;
+  });
   const s = {
     config: {
+      teamNames: tn,
       course: c.course || '',
       parsSet: !!c.parsSet,
       pars: Array.isArray(c.pars) && c.pars.length === 9 ? c.pars.map(Number) : Array(9).fill(4),
@@ -321,7 +331,7 @@ function buildTeams(cfg) {
     const auto = ps.length === 3 ? Math.round(autoAllowance(ps.map((p) => p.h))) : 0;
     const ov = cfg.allowOverride[id];
     out[id] = {
-      name: 'Team ' + id,
+      name: (cfg.teamNames && cfg.teamNames[id]) || 'Team ' + id,
       players: ps,
       auto: auto,
       allowance: typeof ov === 'number' ? ov : auto,
@@ -585,7 +595,7 @@ function rulesSheet() {
     '<li><b>Tees:</b> Everyone plays the white tees by default.</li>' +
     '<li><b>Tee choice, once per team:</b> Before anyone tees off on a hole, the team may move forward one tee box (add 1 to the score on that hole) or move back one tee box (subtract 1). One use per team for the whole round. The choice is locked once the first shot is hit.</li>' +
     '<li><b>Mulligans:</b> ' + esc(mullText()) + '</li>' +
-    '<li><b>Scoring:</b> Lowest net score wins. Net is the team score, plus or minus the tee choice adjustment, minus the team allowance (' + TEAM_IDS.map((id) => id + ': ' + TEAMS[id].allowance).join(', ') + ').</li>' +
+    '<li><b>Scoring:</b> Lowest net score wins. Net is the team score, plus or minus the tee choice adjustment, minus the team allowance (' + TEAM_IDS.map((id) => TEAMS[id].name + ': ' + TEAMS[id].allowance).join(', ') + ').</li>' +
     '<li><b>Captains:</b> Each team\u2019s captain enters the score after every hole. Everyone else can watch every scorecard.</li>' +
     '<li><b>Tiebreaker:</b> Closest to the pin on the last hole.</li>' +
     '</ul></div><div class="actions"><button class="btn primary" data-act="close">Close</button></div>');
@@ -627,8 +637,10 @@ function newDraft() {
     pars: c.pars.map(String),
     players: c.players.map((p) => ({ n: p.n, h: String(p.h), t: p.t, m: String(p.m), lock: p.lock })),
     allow: {},
+    name: {},
     cap: Object.assign({}, c.captains)
   };
+  TEAM_IDS.forEach((id) => { d.name[id] = c.teamNames[id] || ''; });
   TEAM_IDS.forEach((id) => { d.allow[id] = c.allowOverride[id] !== undefined ? String(c.allowOverride[id]) : ''; });
   return d;
 }
@@ -638,6 +650,7 @@ function syncDraft() {
   draft.course = $('#fCourse').value;
   TEAM_IDS.forEach((id) => {
     draft.tee[id] = $('#fTee' + id).value;
+    draft.name[id] = $('#fName' + id).value;
     draft.allow[id] = $('#fAllow' + id).value;
     const cv = $('#fCap' + id).value;
     if (cv) draft.cap[id] = cv;
@@ -648,6 +661,8 @@ function syncDraft() {
     p.m = $('#pM' + i).value; p.lock = $('#pL' + i).checked;
   });
 }
+
+function draftName(id) { return String(draft.name[id] || '').trim() || 'Team ' + id; }
 
 function draftTeam(id) {
   const ps = draft.players.filter((p) => p.t === id);
@@ -676,6 +691,7 @@ function capOptions(id) {
 function updatePreview() {
   TEAM_IDS.forEach((id) => {
     const t = draftTeam(id);
+    const tl = $('#tmT' + id); if (tl) tl.textContent = draftName(id);
     const n = $('#tmN' + id); if (n) n.textContent = t.ps.map((p) => p.n).join(', ');
     const a = $('#tmA' + id); if (a) a.textContent = autoText(t);
     const sel = $('#fCap' + id);
@@ -685,7 +701,8 @@ function updatePreview() {
 
 function teamBlock(id) {
   const t = draftTeam(id);
-  return '<div class="tm"><div><b>Team ' + id + '</b> <span class="tmn" id="tmN' + id + '">' + esc(t.ps.map((p) => p.n).join(', ')) + '</span></div>' +
+  return '<div class="tm"><label class="tmname"><span>Team ' + id + ' name</span><input class="dr" type="text" id="fName' + id + '" value="' + esc(draft.name[id] || '') + '" maxlength="' + TEAM_NAME_MAX + '" placeholder="Team ' + id + '"></label>' +
+    '<div class="tmn" id="tmN' + id + '">' + esc(t.ps.map((p) => p.n).join(', ')) + '</div>' +
     '<div class="tmr"><label>Captain<select class="dr" id="fCap' + id + '">' + capOptions(id) + '</select></label>' +
     '<label>Allowance override<input class="dr" type="number" inputmode="numeric" min="0" max="30" id="fAllow' + id + '" value="' + esc(draft.allow[id]) + '" placeholder="auto"></label>' +
     '<small id="tmA' + id + '">' + autoText(t) + '</small></div></div>';
@@ -724,7 +741,7 @@ function setupSheet() {
   openSheet('<h2>Setup</h2>' +
     (started ? '<div class="warn">Scores have already been entered. Changing teams, names or allowances now changes the leaderboard, and drive counts are tied to player names.</div>' : '') +
     '<label class="field"><span>Course name</span><input type="text" id="fCourse" class="dr" value="' + esc(draft.course) + '" maxlength="60"></label>' +
-    '<h3>Tee times</h3>' + TEAM_IDS.map((id) => '<label class="field"><span>Team ' + id + '</span><input type="text" class="dr" id="fTee' + id + '" value="' + esc(draft.tee[id] || '') + '" maxlength="20" placeholder="e.g. 8:00 am"></label>').join('') +
+    '<h3>Tee times</h3>' + TEAM_IDS.map((id) => '<label class="field"><span id="tmT' + id + '">' + esc(draftName(id)) + '</span><input type="text" class="dr" id="fTee' + id + '" value="' + esc(draft.tee[id] || '') + '" maxlength="20" placeholder="e.g. 8:00 am"></label>').join('') +
     '<h3>Par for holes 1 to 9</h3><div class="pars">' + draft.pars.map((v, i) => '<input type="number" inputmode="numeric" min="3" max="6" id="fPar' + i + '" value="' + esc(v) + '" aria-label="Par hole ' + (i + 1) + '">').join('') + '</div>' +
     '<h3>Players and handicaps</h3>' +
     '<div class="prow phead"><span>Name</span><span>Hcp</span><span>Team</span><span>Mull</span><span>Lock</span></div>' + rows +
@@ -791,15 +808,23 @@ function saveSetup() {
   }
   for (let k = 0; k < TEAM_IDS.length; k++) {
     const id = TEAM_IDS[k];
-    if (players.filter((p) => p.t === id).length !== 3) return toast('Team ' + id + ' needs exactly 3 players');
+    if (players.filter((p) => p.t === id).length !== 3) return toast(draftName(id) + ' needs exactly 3 players');
   }
   const allowOverride = {};
   for (let k = 0; k < TEAM_IDS.length; k++) {
     const id = TEAM_IDS[k], txt = String(draft.allow[id] || '').trim();
     if (txt === '') { allowOverride[id] = DEL; continue; }
     const v = parseInt(txt, 10);
-    if (isNaN(v) || v < 0 || v > 30) return toast('Allowance for Team ' + id + ' must be 0 to 30');
+    if (isNaN(v) || v < 0 || v > 30) return toast('Allowance for ' + draftName(id) + ' must be 0 to 30');
     allowOverride[id] = v;
+  }
+  const teamNames = {}, seen = {};
+  for (let k = 0; k < TEAM_IDS.length; k++) {
+    const id = TEAM_IDS[k], nm = String(draft.name[id] || '').trim().slice(0, TEAM_NAME_MAX);
+    const shown = (nm || 'Team ' + id).toLowerCase();
+    if (seen[shown]) return toast('Each team needs a different name');
+    seen[shown] = true;
+    teamNames[id] = nm || DEL;
   }
   const pars = draft.pars.map((x) => { const v = parseInt(x, 10); return v >= 3 && v <= 6 ? v : 4; });
   const captains = {}, teeTimes = {};
@@ -808,7 +833,7 @@ function saveSetup() {
     captains[id] = ps.some((p) => p.n === draft.cap[id]) ? draft.cap[id] : ps.slice().sort((a, b) => a.h - b.h)[0].n;
     teeTimes[id] = (draft.tee[id] || '').trim();
   });
-  save({ config: { course: draft.course.trim(), pars: pars, parsSet: true, captains: captains, teeTimes: teeTimes, players: players, allowOverride: allowOverride } });
+  save({ config: { teamNames: teamNames, course: draft.course.trim(), pars: pars, parsSet: true, captains: captains, teeTimes: teeTimes, players: players, allowOverride: allowOverride } });
   toast('Setup saved');
   closeSheet();
 }
