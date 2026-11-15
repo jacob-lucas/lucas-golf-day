@@ -90,6 +90,7 @@ async function run() {
     check(/Team handicap: 6 shots/.test(hb) && /Michael/.test(hb) && /11\.4/.test(hb) && /5\.7/.test(hb), 'team card shows the handicap workings: ' + hb.slice(0, 0));
     const kids = Array.from(cr.d.querySelector('.card').children).map((e) => e.className || e.tagName);
     check(!cr.has('[data-act=editname]'), 'non-captain sees no edit icon on a team card');
+    check(/Michael \(c, 6\), Matt \(30\), Lachie \(54\)/.test(cr.text('.card .sub')), 'card player list marks the captain as (c, hcp): ' + cr.text('.card .sub').slice(0, 0));
     {
       const kc = boot('Ken'); await wait(50);
       kc.click('#tabCards'); kc.click('[data-act=cardteam][data-team=C]');
