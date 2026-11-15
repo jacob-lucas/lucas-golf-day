@@ -204,13 +204,17 @@ async function run() {
     j.click('#tabCards'); j.click('[data-act=cardteam][data-team=B]');
     for (let h = 1; h <= 3; h++) {
       j.click('tr[data-hole="' + h + '"]');
+      check(!/cannot be selected again/.test(j.text('.sheet')) , 'no cannot-select note before anyone has 3 drives (hole ' + h + ')');
       j.click('[data-act=setdrive][data-name=Stu]');
+      check(h === 3 ? /Stu's last drive/.test(j.text('.sheet')) : !/last drive/.test(j.text('.sheet')), 'last-drive note appears only when Stu takes his 3rd (hole ' + h + ')');
       j.click('[data-act=savehole]');
     }
     check(/Stu 3\/3/.test(j.text('.tally')), 'Stu has 3 drives recorded');
     j.click('tr[data-hole="4"]');
     const st = j.d.querySelector('[data-act=setdrive][data-name=Stu]');
     check(st.disabled, 'Stu is greyed out on hole 4 after 3 drives');
+    check(/Players with all 3 drives already used cannot be selected again\./.test(j.text('.sheet')), 'cannot-be-selected note shown with new wording');
+    check(!/last drive/.test(j.text('.sheet')), 'no last-drive note when nobody is selected');
     check(!j.d.querySelector('[data-act=setdrive][data-name=Jacob]').disabled && !j.d.querySelector('[data-act=setdrive][data-name=Jett]').disabled, 'other players still selectable');
     st.dispatchEvent(new j.w.MouseEvent('click', { bubbles: true }));
     check(j.d.querySelector('[data-act=setdrive][data-name=Stu]').getAttribute('aria-pressed') === 'false', 'greyed player cannot be chosen');

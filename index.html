@@ -667,11 +667,13 @@ function whoSheet() {
 }
 
 // True when a player already has all their drives recorded on other holes (so they cannot be picked here).
+function driveElsewhere(e, name) {
+  const saved = (state.teams[e.team].holes[e.hole] || {}).d;
+  return calc(e.team).drives[name] - (saved === name ? 1 : 0);
+}
 function driveMaxed(e, name) {
   if (e.d === name) return false;
-  const saved = (state.teams[e.team].holes[e.hole] || {}).d;
-  const elsewhere = calc(e.team).drives[name] - (saved === name ? 1 : 0);
-  return elsewhere >= DRIVES_EACH;
+  return driveElsewhere(e, name) >= DRIVES_EACH;
 }
 function holeSheet() {
   const e = edit, T = TEAMS[e.team], c = calc(e.team), par = state.config.pars[e.hole - 1];
@@ -689,7 +691,8 @@ function holeSheet() {
       tee('b', 'Back one box', teeElsewhere ? 'Tee choice already used on hole ' + c.teeHole : 'Subtracts 1 from the score') + '</div>' +
     '<h3>Whose drive was used?</h3><div class="chips">' +
       T.players.map((p) => '<button class="opt" data-act="setdrive" data-name="' + esc(p.n) + '" aria-pressed="' + (e.d === p.n) + '"' + (driveMaxed(e, p.n) ? ' disabled' : '') + '>' + esc(p.n) + ' (' + c.drives[p.n] + '/' + DRIVES_EACH + ')</button>').join('') + '</div>' +
-    (T.players.some((p) => driveMaxed(e, p.n)) ? '<p class="note">Players with all ' + DRIVES_EACH + ' drives already used on other holes are greyed out.</p>' : '') +
+    (e.d && driveElsewhere(e, e.d) === DRIVES_EACH - 1 ? '<p class="note"><b>' + esc(e.d) + '\'s last drive.</b></p>' : '') +
+    (T.players.some((p) => driveMaxed(e, p.n)) ? '<p class="note">Players with all ' + DRIVES_EACH + ' drives already used cannot be selected again.</p>' : '') +
     (T.mullPool ? '<h3>Mulligans used on this hole (' + mullLeft + ' left before this hole)</h3><div class="stepper small"><button data-act="mdec" aria-label="Fewer mulligans">-</button><output id="mval">' + e.m + '</output><button data-act="minc" aria-label="More mulligans">+</button></div>' : '') +
     '<div class="actions"><button class="btn primary" data-act="savehole">Save hole ' + e.hole + '</button>' +
     '<button class="btn danger" data-act="clearhole">Clear hole</button><button class="btn" data-act="close">Cancel</button></div>');
