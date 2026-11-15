@@ -174,7 +174,7 @@ input[type=text],select,input[type=number]{width:100%;padding:11px;border:1px so
     <button class="hbtn hidden" id="btnSettings" data-act="settings" aria-label="Course settings">Setup</button>
     <button class="hbtn" data-act="rules">Rules</button>
   </div>
-  <p class="dateline"><span>Monday 28 December</span><span id="wx" class="wx" aria-live="polite"></span></p>
+  <p class="dateline"><span>Monday 28 December</span><span id="wx" class="wx" aria-live="polite" role="button" data-act="wxretry"></span></p>
   <div class="meta">
     <span class="pill"><span class="dot" id="dot"></span><span id="statusText">Connecting</span></span>
     <button class="who" id="whoBtn" data-act="who">Choose name</button>
@@ -801,6 +801,7 @@ function openHole(n) {
 function onAct(el, ev) {
   const a = el.dataset.act;
   switch (a) {
+    case 'wxretry': return loadWx();
     case 'rules': return rulesSheet();
     case 'who': return whoSheet();
     case 'settings': if (me !== ORGANISER) return; draft = newDraft(); return setupSheet();
@@ -880,23 +881,33 @@ function wxDesc(c) {
 }
 function showWx(w) {
   const d = wxDesc(w.code);
-  $('#wx').dataset.ok = '1';
   $('#wx').textContent = WEATHER.place + ': ' + d[0] + ' ' + (d[1] || 'Current') + ' · 🌡️ ' + Math.round(w.temp) + '°C · 💨 ' + Math.round(w.wind) + ' km/h';
+  $('#wx').dataset.ok = '1';
 }
+let wxTimer = null;
 function loadWx() {
+  const el = $('#wx');
   try { const c = JSON.parse(localStorage.getItem('golf.wx') || 'null'); if (c) showWx(c); } catch (e) {}
-  if (!$('#wx').dataset.ok) $('#wx').textContent = WEATHER.place + ' weather loading';
-  fetch('https://api.open-meteo.com/v1/forecast?latitude=' + WEATHER.lat + '&longitude=' + WEATHER.lon +
-        '&current=temperature_2m,weather_code,wind_speed_10m&timezone=auto')
-    .then((r) => r.json())
+  if (!el.dataset.ok) el.textContent = WEATHER.place + ' weather loading';
+  const ctl = typeof AbortController === 'function' ? new AbortController() : null;
+  const timer = setTimeout(() => { if (ctl) ctl.abort(); }, 10000);
+  const url = 'https://api.open-meteo.com/v1/forecast?latitude=' + WEATHER.lat + '&longitude=' + WEATHER.lon +
+              '&current=temperature_2m,weather_code,wind_speed_10m&timezone=auto';
+  fetch(url, { cache: 'no-store', referrerPolicy: 'no-referrer', signal: ctl ? ctl.signal : undefined })
+    .then((r) => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
     .then((j) => {
+      clearTimeout(timer);
       const c = j && j.current;
-      if (!c) throw new Error('no weather');
+      if (!c) throw new Error((j && j.reason) || 'no data returned');
       const w = { temp: c.temperature_2m, code: c.weather_code, wind: c.wind_speed_10m };
       try { localStorage.setItem('golf.wx', JSON.stringify(w)); } catch (e) {}
       showWx(w);
     })
-    .catch(() => { if (!$('#wx').dataset.ok) $('#wx').textContent = WEATHER.place + ' weather unavailable'; });
+    .catch((e) => {
+      clearTimeout(timer);
+      const why = e && e.name === 'AbortError' ? 'timed out' : String((e && e.message) || e || 'error').slice(0, 40);
+      if (!el.dataset.ok) el.textContent = WEATHER.place + ' weather unavailable (' + why + '). Tap to retry';
+    });
 }
 loadWx();
 setInterval(loadWx, 10 * 60 * 1000);
