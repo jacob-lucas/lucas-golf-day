@@ -534,7 +534,7 @@ function renderBoard() {
 
   return banners() + infoCard() +
     '<div class="board"><div class="bhead"><span>Pos</span><span>Team</span><span>Net</span><span>Gross</span><span>Thru</span></div>' + body + '</div>' +
-    '<p class="foot">Scores are to par. Net takes off each team\u2019s allowance, spread across the holes played. Gross is before the allowance. Tee choice adjustments are included in both. Tap a team to see its scorecard.</p>' +
+    '<p class="foot">Net is gross minus the team handicap, spread over the holes played. Tap a team to see its scorecard.</p>' +
     '<p class="buildinfo" id="buildinfo">' + buildHtml() + '</p>';
 }
 
