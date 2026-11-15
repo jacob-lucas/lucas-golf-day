@@ -197,6 +197,30 @@ async function run() {
     check(!/6/.test(j.d.querySelector('tr[data-hole="1"] .sc').textContent), 'clearing a hole removes the score');
   }
 
+  // ---------- 5b. Drive limit ----------
+  section('5b. Drive limit');
+  {
+    const j = boot('Jacob'); await wait(50);
+    j.click('#tabCards'); j.click('[data-act=cardteam][data-team=B]');
+    for (let h = 1; h <= 3; h++) {
+      j.click('tr[data-hole="' + h + '"]');
+      j.click('[data-act=setdrive][data-name=Stu]');
+      j.click('[data-act=savehole]');
+    }
+    check(/Stu 3\/3/.test(j.text('.tally')), 'Stu has 3 drives recorded');
+    j.click('tr[data-hole="4"]');
+    const st = j.d.querySelector('[data-act=setdrive][data-name=Stu]');
+    check(st.disabled, 'Stu is greyed out on hole 4 after 3 drives');
+    check(!j.d.querySelector('[data-act=setdrive][data-name=Jacob]').disabled && !j.d.querySelector('[data-act=setdrive][data-name=Jett]').disabled, 'other players still selectable');
+    st.dispatchEvent(new j.w.MouseEvent('click', { bubbles: true }));
+    check(j.d.querySelector('[data-act=setdrive][data-name=Stu]').getAttribute('aria-pressed') === 'false', 'greyed player cannot be chosen');
+    j.click('[data-act=close]');
+    j.click('tr[data-hole="2"]');
+    const st2 = j.d.querySelector('[data-act=setdrive][data-name=Stu]');
+    check(!st2.disabled && st2.getAttribute('aria-pressed') === 'true', 'on a hole where Stu was used he stays selected and editable');
+    j.click('[data-act=close]');
+  }
+
   // ---------- 6. Setup: course, balance, overrides, validation ----------
   section('6. Setup');
   {
