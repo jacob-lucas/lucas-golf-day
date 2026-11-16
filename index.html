@@ -384,7 +384,10 @@ function toRemote(p) {
   return out;
 }
 
-function setState(r) { raw = r || {}; state = norm(raw); TEAMS = buildTeams(state.config); render(); }
+function setState(r) {
+  raw = r || {}; state = norm(raw); TEAMS = buildTeams(state.config); render();
+  if (liveSheet && $('#layer').firstChild) liveSheet();
+}
 
 function save(patch) {
   if (mode === 'remote') {
@@ -598,7 +601,11 @@ function render() {
    6. SHEETS (rules, name picker, hole editor, setup)
    ============================================================ */
 
+// A sheet that depends on shared data (name picker, rules) registers a rebuild function here, so it
+// is redrawn when new data arrives while it is open.
+let liveSheet = null;
 function openSheet(html) {
+  liveSheet = null;
   $('#layer').innerHTML = '<div class="scrim" data-act="scrim"><div class="sheet" role="dialog" aria-modal="true">' + html + '</div></div>';
 }
 function crestSheet() {
@@ -661,7 +668,7 @@ function resetScores() {
   save({ teams: t });
   toast('All scores erased');
 }
-function closeSheet() { $('#layer').innerHTML = ''; edit = null; draft = null; }
+function closeSheet() { $('#layer').innerHTML = ''; edit = null; draft = null; liveSheet = null; }
 
 function rulesSheet() {
   openSheet('<h2>Rules</h2><div class="rules"><ul>' +
@@ -674,6 +681,7 @@ function rulesSheet() {
     '<li><b>Captains:</b> Each team\u2019s captain enters the score after every hole. Everyone else can watch every scorecard.</li>' +
     '<li><b>Tiebreaker:</b> Closest to the pin on the last hole.</li>' +
     '</ul></div><div class="actions"><button class="btn primary" data-act="close">Close</button></div>');
+  liveSheet = rulesSheet;
 }
 
 function whoSheet() {
@@ -681,6 +689,7 @@ function whoSheet() {
     TEAMS[id].players.map((p) => '<button class="opt" aria-pressed="' + (p.n === me) + '" data-act="setme" data-name="' + esc(p.n) + '">' + esc(p.n) + '</button>').join('') + '</div>').join('');
   openSheet('<h2>Who are you?</h2><p>Pick your name. If you are your team\u2019s captain you can enter its scores. Everyone else can view all scorecards.</p>' + groups +
     (me ? '<div class="actions"><button class="btn primary" data-act="close">Cancel</button></div>' : ''));
+  liveSheet = whoSheet;
 }
 
 // True when a player already has all their drives recorded on other holes (so they cannot be picked here).

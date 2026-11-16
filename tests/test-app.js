@@ -56,6 +56,25 @@ async function run() {
     check(n.has('.scrim'), 'new visitor is asked to pick a name');
   }
 
+  // ---------- 1b. Name picker stays in sync with the leaderboard ----------
+  section('1b. Name picker stays in sync with the leaderboard');
+  {
+    const n = boot(null); await wait(50);
+    const chipsFor = (team) => Array.from(n.d.querySelectorAll('.sheet h3')).filter((h) => h.textContent === team).map((h) => Array.from(h.nextElementSibling.querySelectorAll('.opt')).map((b) => b.textContent))[0] || [];
+    check(chipsFor('Team A').join() === 'Michael,Matt,Lachie', 'picker starts with the default teams');
+    // New data arrives while the picker is open (as when the first Firestore snapshot lands)
+    const moved = { Michael: 'C', Matt: 'A', Lachie: 'A', Jacob: 'A', Stu: 'B', Jett: 'B', Ken: 'C', Adam: 'B', Ron: 'C' };
+    const players = [['Michael', 6], ['Matt', 30], ['Lachie', 54], ['Jacob', 15], ['Stu', 25], ['Jett', 54], ['Ken', 25], ['Adam', 25], ['Ron', 54]].map((x) => ({ n: x[0], h: x[1], t: moved[x[0]], m: 0, lock: false }));
+    n.w.dispatchEvent(new n.w.StorageEvent('storage', { key: 'golf.demo', newValue: JSON.stringify({ config: { players: players } }) }));
+    await wait(30);
+    check(n.has('.scrim') && n.has('[data-act=setme]'), 'picker is still open after the data update');
+    check(chipsFor('Team A').slice().sort().join() === 'Jacob,Lachie,Matt', 'picker Team A updates to the saved team: ' + chipsFor('Team A').join());
+    check(chipsFor('Team C').slice().sort().join() === 'Ken,Michael,Ron', 'picker Team C updates to the saved team: ' + chipsFor('Team C').join());
+    const board = {};
+    n.d.querySelectorAll('.brow').forEach((r) => { board[r.querySelector('.tname').textContent] = r.querySelector('.tplay').textContent.replace(/\(c\)/g, '').replace(/ \u00b7.*$/, '').split(',').map((x) => x.trim()).sort().join(); });
+    ['Team A', 'Team B', 'Team C'].forEach((t) => check(board[t] === chipsFor(t).slice().sort().join(), 'picker and leaderboard agree for ' + t + ': ' + board[t]));
+  }
+
   // ---------- 2. Weather ----------
   section('2. Weather line');
   {
